@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, Send, FileText, Euro } from "lucide-react";
+import { Suspense } from "react";
+
 
 export default function ExpertReplyPage() {
   const searchParams = useSearchParams();
@@ -11,6 +13,7 @@ export default function ExpertReplyPage() {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("");
+  const dynamic = "force-dynamic";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
