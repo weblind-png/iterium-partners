@@ -11,7 +11,6 @@ import db from "@/lib/db";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const preferredRegion = "auto";
-export const bodyParser = false;
 
 // ✅ Stripe init
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
