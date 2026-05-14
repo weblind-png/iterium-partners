@@ -9,7 +9,7 @@
   "lint": "next lint",
   "postbuild": "cp -r .next/static .next/standalone/.next/static || true"
 }
-  },
+  } ,
   "dependencies": {
     "better-sqlite3": "^12.4.1",
     "dotenv": "^17.2.3",
