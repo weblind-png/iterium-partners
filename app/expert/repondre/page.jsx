@@ -1,25 +1,26 @@
-export const dynamic = 'force-dynamic';
+"use client";
+
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-// 1. Crée un composant interne qui contient ta logique actuelle
-function FormulaireExpert() {
+// On sépare la logique qui utilise l'URL dans un petit composant
+function FormulaireExpertContent() {
   const searchParams = useSearchParams();
-  const id = searchParams.get('id'); // Ta logique actuelle
-
+  // ... ici ta logique actuelle qui utilise peut-être searchParams.get('...')
+  
   return (
     <div>
-      {/* Tout ton code HTML/JSX actuel ici */}
-      <h1>Répondre à l'expertise {id}</h1>
+       {/* Remet ici tout le contenu (le return) que tu avais avant dans ce fichier */}
+       <h1>Répondre à la mission</h1>
     </div>
   );
 }
 
-// 2. Ta page principale doit juste appeler le composant dans un Suspense
-export default function PageExpert() {
+// Le composant principal qui exporte la page avec la protection Suspense
+export default function RepondreExpertPage() {
   return (
-    <Suspense fallback={<div>Chargement du formulaire...</div>}>
-      <FormulaireExpert />
+    <Suspense fallback={<div className="min-h-screen bg-[#0A2942] text-white flex items-center justify-center">Chargement du formulaire...</div>}>
+      <FormulaireExpertContent />
     </Suspense>
   );
 }
