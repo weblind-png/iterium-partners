@@ -12,11 +12,10 @@ export default function ExpertPage() {
     experience: "",
     expertises: "",
     disponibilite: "",
-    localisation: "",
+    localisation: "", // Ce champ stockera désormais la région sélectionnée
     tjm: "",
   });
 
-  // Nouveau state pour gérer les cases à cocher d'intervention
   const [interventionChoices, setInterventionChoices] = useState({
     teletravail: false,
     hybride: false,
@@ -34,7 +33,6 @@ export default function ExpertPage() {
     });
   };
 
-  // Gestion spécifique des cases à cocher
   const handleCheckboxChange = (e) => {
     setInterventionChoices({
       ...interventionChoices,
@@ -56,12 +54,10 @@ export default function ExpertPage() {
     try {
       const formData = new FormData();
       
-      // On ajoute les champs textes classiques
       Object.keys(form).forEach((key) => {
         formData.append(key, form[key]);
       });
 
-      // On transforme les choix cochés en une chaîne de texte lisible (ex: "Télétravail, Hybride")
       const selectedInterventions = Object.keys(interventionChoices)
         .filter((key) => interventionChoices[key])
         .map((key) => {
@@ -203,14 +199,47 @@ export default function ExpertPage() {
           />
 
           <div className="grid md:grid-cols-2 gap-4">
-            <input
-              type="text"
+            
+            {/* CHANGEMENT 2 : Liste déroulante des Régions & DOM-TOM */}
+            <select
               name="localisation"
-              placeholder="Ville / Région / Pays"
               value={form.localisation}
               onChange={handleChange}
-              className="w-full border border-slate-300 rounded-xl p-4"
-            />
+              required
+              className="w-full border border-slate-300 rounded-xl p-4 bg-white text-slate-800 appearance-none cursor-pointer"
+            >
+              <option value="" disabled text-slate-400>Région principale de résidence</option>
+              
+              <g id="france-metropolitaine" label="France Métropolitaine">
+                <option value="Auvergne-Rhône-Alpes">Auvergne-Rhône-Alpes</option>
+                <option value="Bourgogne-Franche-Comté">Bourgogne-Franche-Comté</option>
+                <option value="Bretagne">Bretagne</option>
+                <option value="Centre-Val de Loire">Centre-Val de Loire</option>
+                <option value="Corse">Corse</option>
+                <option value="Grand Est">Grand Est</option>
+                <option value="Hauts-de-France">Hauts-de-France</option>
+                <option value="Île-de-France">Île-de-France</option>
+                <option value="Normandie">Normandie</option>
+                <option value="Nouvelle-Aquitaine">Nouvelle-Aquitaine</option>
+                <option value="Occitanie">Occitanie</option>
+                <option value="Pays de la Loire">Pays de la Loire</option>
+                <option value="Provence-Alpes-Côte d'Azur">Provence-Alpes-Côte d'Azur</option>
+              </g>
+
+              <g id="dom-tom" label="DROM-COM / International">
+                <option value="Guadeloupe">Guadeloupe</option>
+                <option value="Guyane">Guyane</option>
+                <option value="La Réunion">La Réunion</option>
+                <option value="Martinique">Martinique</option>
+                <option value="Mayotte">Mayotte</option>
+                <option value="Nouvelle-Calédonie">Nouvelle-Calédonie</option>
+                <option value="Polynésie française">Polynésie française</option>
+                <option value="Saint-Barthélemy / Saint-Martin">Saint-Barthélemy / Saint-Martin</option>
+                <option value="Saint-Pierre-et-Miquelon">Saint-Pierre-et-Miquelon</option>
+                <option value="Wallis-et-Futuna">Wallis-et-Futuna</option>
+                <option value="International / Autre">International / Étranger</option>
+              </g>
+            </select>
 
             <input
               type="text"
@@ -230,7 +259,6 @@ export default function ExpertPage() {
               className="w-full border border-slate-300 rounded-xl p-4"
             />
 
-            {/* BLOC CASES À COCHER : Remplace l'ancien input texte d'intervention */}
             <div className="border border-slate-300 rounded-xl p-4 flex flex-col justify-center space-y-2">
               <span className="text-sm font-semibold text-slate-500 mb-1 block">Mode d'intervention souhaité :</span>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
