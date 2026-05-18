@@ -14,10 +14,15 @@ export default function ExpertPage() {
     disponibilite: "",
     localisation: "",
     tjm: "",
-    intervention: "",
   });
 
-  // Nouveaux états uniquement pour la photo
+  // Nouveau state pour gérer les cases à cocher d'intervention
+  const [interventionChoices, setInterventionChoices] = useState({
+    teletravail: false,
+    hybride: false,
+    surSite: false,
+  });
+
   const [photoFile, setPhotoFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
@@ -29,7 +34,14 @@ export default function ExpertPage() {
     });
   };
 
-  // Gestion du fichier photo
+  // Gestion spécifique des cases à cocher
+  const handleCheckboxChange = (e) => {
+    setInterventionChoices({
+      ...interventionChoices,
+      [e.target.name]: e.target.checked,
+    });
+  };
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -42,22 +54,32 @@ export default function ExpertPage() {
     e.preventDefault();
 
     try {
-      // Obligatoire pour envoyer un fichier mixé avec du texte à l'API
       const formData = new FormData();
       
-      // On ajoute tous tes champs textes actuels
+      // On ajoute les champs textes classiques
       Object.keys(form).forEach((key) => {
         formData.append(key, form[key]);
       });
 
-      // On ajoute le fichier photo s'il existe
+      // On transforme les choix cochés en une chaîne de texte lisible (ex: "Télétravail, Hybride")
+      const selectedInterventions = Object.keys(interventionChoices)
+        .filter((key) => interventionChoices[key])
+        .map((key) => {
+          if (key === "teletravail") return "Télétravail";
+          if (key === "hybride") return "Hybride";
+          if (key === "surSite") return "Sur site";
+          return key;
+        })
+        .join(", ");
+
+      formData.append("intervention", selectedInterventions);
+
       if (photoFile) {
         formData.append("photo", photoFile);
       }
 
       const res = await fetch("/api/contact-expert", {
         method: "POST",
-        // Note : On retire le "Content-Type": "application/json", le navigateur gère le FormData automatiquement
         body: formData,
       });
 
@@ -75,7 +97,11 @@ export default function ExpertPage() {
           disponibilite: "",
           localisation: "",
           tjm: "",
-          intervention: "",
+        });
+        setInterventionChoices({
+          teletravail: false,
+          hybride: false,
+          surSite: false,
         });
         setPhotoFile(null);
         setPreviewUrl(null);
@@ -204,25 +230,52 @@ export default function ExpertPage() {
               className="w-full border border-slate-300 rounded-xl p-4"
             />
 
-            <input
-              type="text"
-              name="intervention"
-              placeholder="Télétravail / Hybride / Sur site"
-              value={form.intervention}
-              onChange={handleChange}
-              className="w-full border border-slate-300 rounded-xl p-4"
-            />
+            {/* BLOC CASES À COCHER : Remplace l'ancien input texte d'intervention */}
+            <div className="border border-slate-300 rounded-xl p-4 flex flex-col justify-center space-y-2">
+              <span className="text-sm font-semibold text-slate-500 mb-1 block">Mode d'intervention souhaité :</span>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="teletravail"
+                    checked={interventionChoices.teletravail}
+                    onChange={handleCheckboxChange}
+                    className="w-4 h-4 text-[#0A2942] border-slate-300 rounded focus:ring-[#0A2942]"
+                  />
+                  <span>Télétravail</span>
+                </label>
+
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="hybride"
+                    checked={interventionChoices.hybride}
+                    onChange={handleCheckboxChange}
+                    className="w-4 h-4 text-[#0A2942] border-slate-300 rounded focus:ring-[#0A2942]"
+                  />
+                  <span>Hybride</span>
+                </label>
+
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="surSite"
+                    checked={interventionChoices.surSite}
+                    onChange={handleCheckboxChange}
+                    className="w-4 h-4 text-[#0A2942] border-slate-300 rounded focus:ring-[#0A2942]"
+                  />
+                  <span>Sur site</span>
+                </label>
+              </div>
+            </div>
           </div>
 
-          {/* AJOUT DU MODULE PHOTO AVEC EXEMPLE ANONYME */}
           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
             <label className="block text-sm font-bold text-slate-700 mb-3">
               Ajouter votre Photo (Carrée & Professionnelle)
             </label>
             
             <div className="grid sm:grid-cols-2 gap-4 items-center">
-              
-              {/* Bouton de chargement */}
               <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 bg-white rounded-xl p-4 text-center">
                 <input 
                   type="file" 
@@ -251,7 +304,6 @@ export default function ExpertPage() {
                 )}
               </div>
 
-              {/* Guide de Style Anonyme */}
               <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border border-slate-200">
                 <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-300 overflow-hidden shrink-0">
                   <svg className="w-12 h-12 text-slate-400 mt-2" fill="currentColor" viewBox="0 0 24 24">
@@ -263,7 +315,6 @@ export default function ExpertPage() {
                   Gros plan professionnel, centré et cadré carré (Exemple).
                 </div>
               </div>
-
             </div>
           </div>
 
