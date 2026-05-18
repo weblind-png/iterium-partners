@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export default function ExpertPage() {
   const [form, setForm] = useState({
@@ -17,6 +17,11 @@ export default function ExpertPage() {
     intervention: "",
   });
 
+  // Nouveaux états uniquement pour la photo
+  const [photoFile, setPhotoFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const fileInputRef = useRef(null);
+
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -24,16 +29,36 @@ export default function ExpertPage() {
     });
   };
 
+  // Gestion du fichier photo
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setPhotoFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      // Obligatoire pour envoyer un fichier mixé avec du texte à l'API
+      const formData = new FormData();
+      
+      // On ajoute tous tes champs textes actuels
+      Object.keys(form).forEach((key) => {
+        formData.append(key, form[key]);
+      });
+
+      // On ajoute le fichier photo s'il existe
+      if (photoFile) {
+        formData.append("photo", photoFile);
+      }
+
       const res = await fetch("/api/contact-expert", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
+        // Note : On retire le "Content-Type": "application/json", le navigateur gère le FormData automatiquement
+        body: formData,
       });
 
       if (res.ok) {
@@ -52,6 +77,8 @@ export default function ExpertPage() {
           tjm: "",
           intervention: "",
         });
+        setPhotoFile(null);
+        setPreviewUrl(null);
       } else {
         alert("Erreur lors de l’envoi.");
       }
@@ -150,7 +177,6 @@ export default function ExpertPage() {
           />
 
           <div className="grid md:grid-cols-2 gap-4">
-
             <input
               type="text"
               name="localisation"
@@ -186,6 +212,59 @@ export default function ExpertPage() {
               onChange={handleChange}
               className="w-full border border-slate-300 rounded-xl p-4"
             />
+          </div>
+
+          {/* AJOUT DU MODULE PHOTO AVEC EXEMPLE ANONYME */}
+          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+            <label className="block text-sm font-bold text-slate-700 mb-3">
+              Ajouter votre Photo (Carrée & Professionnelle)
+            </label>
+            
+            <div className="grid sm:grid-cols-2 gap-4 items-center">
+              
+              {/* Bouton de chargement */}
+              <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 bg-white rounded-xl p-4 text-center">
+                <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".jpg,.jpeg,.png"
+                  className="hidden" 
+                />
+                
+                {previewUrl ? (
+                  <div>
+                    <img src={previewUrl} alt="Aperçu" className="w-20 h-20 object-cover rounded-xl mx-auto border" />
+                    <button type="button" onClick={() => fileInputRef.current.click()} className="mt-2 text-xs text-blue-600 font-semibold underline">Changer</button>
+                  </div>
+                ) : (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current.click()}
+                      className="bg-[#0A2942] text-white text-sm font-bold py-2 px-4 rounded-xl hover:bg-slate-800 transition"
+                    >
+                      CHARGER MA PHOTO
+                    </button>
+                    <p className="text-[11px] text-slate-500 mt-2">Format carré uniquement (.jpg, .png)</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Guide de Style Anonyme */}
+              <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border border-slate-200">
+                <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-300 overflow-hidden shrink-0">
+                  <svg className="w-12 h-12 text-slate-400 mt-2" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                </div>
+                <div className="text-xs text-slate-600">
+                  <span className="font-bold text-slate-800 block mb-0.5">Style de photo accepté :</span>
+                  Gros plan professionnel, centré et cadré carré (Exemple).
+                </div>
+              </div>
+
+            </div>
           </div>
 
           <div className="bg-slate-100 border border-slate-200 rounded-2xl p-4 text-sm text-slate-600">
