@@ -17,14 +17,16 @@ export default function ExpertPage() {
     intervention: "",
   });
 
-  const handleChange = (e) => {
+  // ICI : Ajout du type pour l'événement de changement
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = async (e) => {
+  // ICI : Ajout du type pour l'événement de soumission du formulaire
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
@@ -133,7 +135,7 @@ export default function ExpertPage() {
           <textarea
             name="experience"
             placeholder="Résumé de votre parcours et expériences"
-            rows="4"
+            rows={4}
             value={form.experience}
             onChange={handleChange}
             required
@@ -143,7 +145,7 @@ export default function ExpertPage() {
           <textarea
             name="expertises"
             placeholder="Expertises clés (SAP, Azure, NIS2, Cloud, Finance...)"
-            rows="3"
+            rows={3}
             value={form.expertises}
             onChange={handleChange}
             className="w-full border border-slate-300 rounded-xl p-4"
