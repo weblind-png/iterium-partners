@@ -27,18 +27,37 @@ export default function ExpertPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("/api/contact-expert", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch("/api/contact-expert", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
 
-    if (res.ok) {
-      alert("Votre candidature a bien été envoyée.");
-    } else {
-      alert("Erreur lors de l’envoi.");
+      if (res.ok) {
+        alert("Votre candidature a bien été envoyée.");
+
+        setForm({
+          nom: "",
+          email: "",
+          telephone: "",
+          linkedin: "",
+          metier: "",
+          experience: "",
+          expertises: "",
+          disponibilite: "",
+          localisation: "",
+          tjm: "",
+          intervention: "",
+        });
+      } else {
+        alert("Erreur lors de l’envoi.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Erreur serveur.");
     }
   };
 
@@ -52,10 +71,9 @@ export default function ExpertPage() {
           </h1>
 
           <p className="text-slate-300 text-lg leading-relaxed">
-            ITERIUM PARTNERS met en relation des entreprises,
-            PME, ETI et grands groupes avec des experts seniors
-            immédiatement disponibles pour des missions stratégiques,
-            ponctuelles ou de transition.
+            ITERIUM PARTNERS met en relation des PME, ETI et grands groupes
+            avec des experts seniors immédiatement disponibles pour des missions
+            stratégiques, ponctuelles ou de transition.
           </p>
         </div>
 
@@ -96,7 +114,7 @@ export default function ExpertPage() {
           <input
             type="text"
             name="linkedin"
-            placeholder="Lien LinkedIn ou site professionnel"
+            placeholder="LinkedIn ou site professionnel"
             value={form.linkedin}
             onChange={handleChange}
             className="w-full border border-slate-300 rounded-xl p-4"
@@ -115,7 +133,7 @@ export default function ExpertPage() {
           <textarea
             name="experience"
             placeholder="Résumé de votre parcours et expériences"
-            rows={4}
+            rows="4"
             value={form.experience}
             onChange={handleChange}
             required
@@ -124,8 +142,8 @@ export default function ExpertPage() {
 
           <textarea
             name="expertises"
-            placeholder="Expertises clés (SAP, Azure, NIS2, Finance, RH, etc.)"
-            rows={3}
+            placeholder="Expertises clés (SAP, Azure, NIS2, Cloud, Finance...)"
+            rows="3"
             value={form.expertises}
             onChange={handleChange}
             className="w-full border border-slate-300 rounded-xl p-4"
@@ -171,10 +189,10 @@ export default function ExpertPage() {
           </div>
 
           <div className="bg-slate-100 border border-slate-200 rounded-2xl p-4 text-sm text-slate-600">
-            Les informations transmises restent confidentielles.
-            Les clients ITERIUM PARTNERS n’accèdent pas directement
-            à vos coordonnées avant validation de la mise en relation
-            et contractualisation.
+            Les informations transmises restent strictement confidentielles.
+            Les entreprises clientes n’accèdent pas directement à vos coordonnées
+            avant validation de la mise en relation et contractualisation via
+            ITERIUM PARTNERS.
           </div>
 
           <button
@@ -184,6 +202,7 @@ export default function ExpertPage() {
             Rejoindre le réseau ITERIUM PARTNERS
           </button>
         </form>
+
       </div>
     </div>
   );
