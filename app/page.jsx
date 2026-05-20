@@ -1,185 +1,415 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Users, Shield, Sparkles, CheckCircle2, UserPlus, Building2 } from "lucide-react";
+import {
+  ArrowRight,
+  Shield,
+  Sparkles,
+  CheckCircle2,
+  Users,
+  Search,
+  Briefcase,
+} from "lucide-react";
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-800">
-      {/* Header */}
-      <header className="bg-[#0A2942] text-white">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-          <img
-            src="/cropped-logo-itrium-conseil.png"
-            alt="ITERIUM PARTNERS"
-            className="h-10 w-auto"
-          />
-          <div>
-            <div className="text-sm opacity-90">Plateforme IA B2B</div>
-            <div className="text-xs opacity-70">Experts disponibles immédiatement</div>
+
+      {/* HEADER */}
+      <header className="bg-[#0A2942] text-white border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+
+          <div className="flex items-center gap-4">
+            <img
+              src="/Logo.png"
+              alt="ITERIUM PARTNERS"
+              className="h-11 w-auto"
+            />
+
+            <div>
+              <div className="font-bold text-lg">
+                ITERIUM PARTNERS
+              </div>
+
+              <div className="text-xs text-slate-300">
+                Plateforme IA B2B de mise en relation experts & entreprises
+              </div>
+            </div>
           </div>
+
+          <Link
+            href="/expert"
+            className="border border-white/20 px-5 py-2 rounded-xl text-sm font-medium hover:bg-white/10 transition"
+          >
+            Rejoindre le réseau expert
+          </Link>
+
         </div>
       </header>
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#0A2942] text-white">
-        <div className="absolute inset-0 pointer-events-none opacity-[0.06] select-none">
+
+        <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
           <img
-            src="/cropped-logo-itrium-conseil.png"
+            src="/Logo.png"
             alt=""
-            className="w-[900px] mx-auto mt-10"
+            className="w-[900px] mx-auto mt-20"
           />
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto px-4 py-20 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
-            La plateforme IA B2B pour des{" "}
-            <span className="text-[#F8B400]">interventions immédiates</span>{" "}
-            entre clients et experts.
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-24 text-center">
+
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/10 rounded-full px-4 py-2 text-sm mb-8">
+            <Sparkles className="w-4 h-4 text-[#F8B400]" />
+            Experts seniors disponibles rapidement
+          </div>
+
+          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight max-w-5xl mx-auto">
+            Accédez immédiatement aux meilleurs experts seniors pour vos projets critiques
           </h1>
-          <p className="mt-6 text-lg text-slate-200 max-w-4xl mx-auto">
-            ITERIUM PARTNERS connecte en temps réel les entreprises et les experts disponibles
-            pour des besoins urgents en IT, DAF, conformité, cybersécurité, RH et bien plus encore.
+
+          <p className="mt-8 text-xl text-slate-200 leading-relaxed max-w-4xl mx-auto">
+            DSI, CTO, RSSI, DAF, DRH, experts cybersécurité,
+            cloud, conformité et transformation digitale
+            disponibles rapidement pour des missions stratégiques.
           </p>
 
-          <div className="mt-10 flex items-center justify-center gap-4 flex-wrap">
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
+
             <Link
-              href="/client"
-              className="inline-flex items-center gap-2 bg-[#F8B400] text-[#0A2942] px-6 py-3 rounded-xl font-semibold hover:bg-yellow-400 transition"
+              href="/mon-espace"
+              className="inline-flex items-center gap-3 bg-[#F8B400] text-[#0A2942] px-8 py-4 rounded-2xl font-bold text-lg hover:bg-yellow-400 transition shadow-xl"
             >
-              <UserPlus className="w-5 h-5" />
-              Devenir client
+              Trouver un expert maintenant
+              <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link
-              href="/expert"
-              className="inline-flex items-center gap-2 border border-white/30 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/10 transition"
-            >
-              <Building2 className="w-5 h-5" />
-              Devenir expert
-            </Link>
+
           </div>
+
+          <div className="mt-14 flex flex-wrap justify-center gap-6 text-sm text-slate-300">
+
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#F8B400]" />
+              Mise en relation rapide
+            </div>
+
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#F8B400]" />
+              Matching IA intelligent
+            </div>
+
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#F8B400]" />
+              Contractualisation sécurisée
+            </div>
+
+          </div>
+
         </div>
+
       </section>
 
-      {/* AVANTAGES (existant conservé) */}
-      <section className="max-w-6xl mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl border bg-white shadow-sm">
-            <Users className="w-6 h-6 text-[#F8B400]" />
-            <h3 className="mt-3 font-semibold text-[#0A2942]">Mise en relation instantanée</h3>
-            <p className="text-sm text-slate-600 mt-1">
-              Accédez rapidement aux experts disponibles, adaptés à votre besoin.
+      {/* COMMENT CA MARCHE */}
+      <section className="py-24 bg-white">
+
+        <div className="max-w-6xl mx-auto px-6">
+
+          <div className="text-center mb-16">
+
+            <h2 className="text-4xl font-bold text-[#0A2942]">
+              Comment fonctionne ITERIUM PARTNERS ?
+            </h2>
+
+            <p className="text-slate-600 mt-4 text-lg">
+              Une plateforme pensée pour connecter rapidement les entreprises
+              avec les meilleurs experts disponibles.
             </p>
+
           </div>
-          <div className="p-6 rounded-2xl border bg-white shadow-sm">
-            <Shield className="w-6 h-6 text-[#F8B400]" />
-            <h3 className="mt-3 font-semibold text-[#0A2942]">Sécurisé & conforme</h3>
-            <p className="text-sm text-slate-600 mt-1">
-              Paiements via Stripe, processus conforme au RGPD.
-            </p>
+
+          <div className="grid md:grid-cols-3 gap-8">
+
+            {/* Bloc 1 */}
+            <div className="bg-white border rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
+
+              <div className="w-14 h-14 rounded-2xl bg-[#0A2942] text-white flex items-center justify-center mb-6">
+                <Search className="w-7 h-7" />
+              </div>
+
+              <h3 className="text-2xl font-bold text-[#0A2942] mb-4">
+                Décrivez votre besoin
+              </h3>
+
+              <p className="text-slate-600 leading-relaxed">
+                Exprimez votre problématique métier,
+                votre urgence ou vos besoins stratégiques.
+              </p>
+
+            </div>
+
+            {/* Bloc 2 */}
+            <div className="bg-white border rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
+
+              <div className="w-14 h-14 rounded-2xl bg-[#0A2942] text-white flex items-center justify-center mb-6">
+                <Sparkles className="w-7 h-7" />
+              </div>
+
+              <h3 className="text-2xl font-bold text-[#0A2942] mb-4">
+                L’IA identifie les experts
+              </h3>
+
+              <p className="text-slate-600 leading-relaxed">
+                Notre moteur IA sélectionne les profils
+                les plus pertinents selon votre besoin.
+              </p>
+
+            </div>
+
+            {/* Bloc 3 */}
+            <div className="bg-white border rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
+
+              <div className="w-14 h-14 rounded-2xl bg-[#0A2942] text-white flex items-center justify-center mb-6">
+                <Shield className="w-7 h-7" />
+              </div>
+
+              <h3 className="text-2xl font-bold text-[#0A2942] mb-4">
+                Mise en relation sécurisée
+              </h3>
+
+              <p className="text-slate-600 leading-relaxed">
+                Contractualisation, conformité RGPD,
+                paiement sécurisé et accès aux coordonnées après validation.
+              </p>
+
+            </div>
+
           </div>
-          <div className="p-6 rounded-2xl border bg-white shadow-sm">
-            <Sparkles className="w-6 h-6 text-[#F8B400]" />
-            <h3 className="mt-3 font-semibold text-[#0A2942]">IA d’assistance</h3>
-            <p className="text-sm text-slate-600 mt-1">
-              Filtrage intelligent des besoins pour accélérer la mise en relation.
-            </p>
-          </div>
+
         </div>
+
       </section>
 
-      {/* OFFRES & TARIFS */}
-      <section className="bg-slate-50 py-16">
-        <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-[#0A2942] text-center">
-            Offres & Tarifs
-          </h2>
-          <p className="text-slate-600 text-center mt-2">
-            Deux formules simples pour démarrer rapidement.
-          </p>
+      {/* EXPERTISES */}
+      <section className="bg-slate-50 py-24">
 
-          <div className="mt-10 grid md:grid-cols-2 gap-6">
-            {/* Offre Standard */}
-            <div className="border rounded-2xl p-8 shadow-sm bg-white">
-              <h3 className="text-xl font-semibold text-[#0A2942] mb-3">
+        <div className="max-w-6xl mx-auto px-6">
+
+          <div className="text-center mb-16">
+
+            <h2 className="text-4xl font-bold text-[#0A2942]">
+              Expertises disponibles
+            </h2>
+
+            <p className="text-slate-600 mt-4 text-lg">
+              Des profils seniors immédiatement mobilisables
+              sur des missions stratégiques et sensibles.
+            </p>
+
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+
+            {[
+              "DSI / CTO",
+              "RSSI / Cybersécurité",
+              "Cloud & Infrastructure",
+              "SAP / ERP",
+              "DAF de transition",
+              "Transformation digitale",
+              "Conformité NIS2",
+              "Direction de programme",
+              "RH & organisation",
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="bg-white border rounded-2xl p-6 flex items-center gap-4 shadow-sm"
+              >
+                <div className="w-11 h-11 rounded-xl bg-[#0A2942] text-white flex items-center justify-center">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+
+                <div className="font-semibold text-[#0A2942]">
+                  {item}
+                </div>
+              </div>
+            ))}
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* OFFRES */}
+      <section className="py-24 bg-white">
+
+        <div className="max-w-6xl mx-auto px-6">
+
+          <div className="text-center mb-16">
+
+            <h2 className="text-4xl font-bold text-[#0A2942]">
+              Offres & accès plateforme
+            </h2>
+
+            <p className="text-slate-600 mt-4 text-lg">
+              Deux formules adaptées aux besoins des PME,
+              ETI et grands groupes.
+            </p>
+
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+
+            {/* STANDARD */}
+            <div className="border rounded-3xl p-10 shadow-sm bg-white">
+
+              <h3 className="text-2xl font-bold text-[#0A2942] mb-4">
                 Offre Standard
               </h3>
-              <p className="text-slate-600 mb-6 text-sm">
-                Idéale pour les entreprises souhaitant accéder rapidement à des experts,
-                sans engagement complexe.
+
+              <p className="text-slate-600 leading-relaxed mb-8">
+                Idéale pour les entreprises souhaitant accéder rapidement
+                à des experts seniors pour des besoins ponctuels.
               </p>
-              <p className="text-4xl font-bold text-[#F8B400] mb-6">490€ / an</p>
-              <ul className="text-sm text-left space-y-2">
-                <li>
-                  <CheckCircle2 className="inline w-4 h-4 text-[#F8B400]" /> Accès à la plateforme & mise en relation
+
+              <div className="text-5xl font-bold text-[#F8B400] mb-8">
+                490€
+                <span className="text-lg text-slate-500 font-medium">
+                  {" "} / an
+                </span>
+              </div>
+
+              <ul className="space-y-4 text-slate-700">
+
+                <li className="flex gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[#F8B400]" />
+                  Accès à la plateforme IA
                 </li>
-                <li>
-                  <CheckCircle2 className="inline w-4 h-4 text-[#F8B400]" /> Matching IA des besoins
+
+                <li className="flex gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[#F8B400]" />
+                  Matching intelligent des profils
                 </li>
-                <li>
-                  <CheckCircle2 className="inline w-4 h-4 text-[#F8B400]" /> Paiements sécurisés via Stripe
+
+                <li className="flex gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[#F8B400]" />
+                  Mise en relation sécurisée
                 </li>
+
               </ul>
+
             </div>
 
-            {/* Offre Premium Groupe (sans mentions SLA / 24/7) */}
-            <div className="border-2 border-[#F8B400] rounded-2xl p-8 shadow-lg bg-white">
-              <h3 className="text-xl font-semibold text-[#0A2942] mb-3">
+            {/* PREMIUM */}
+            <div className="border-2 border-[#F8B400] rounded-3xl p-10 shadow-xl bg-white relative overflow-hidden">
+
+              <div className="absolute top-0 right-0 bg-[#F8B400] text-[#0A2942] px-5 py-2 text-sm font-bold rounded-bl-2xl">
+                PREMIUM
+              </div>
+
+              <h3 className="text-2xl font-bold text-[#0A2942] mb-4">
                 Offre Premium Groupe
               </h3>
-              <p className="text-slate-600 mb-6 text-sm">
-                Pour les groupes multi-entités ou les organisations nécessitant un
-                pilotage complet et un support prioritaire côté plateforme.
+
+              <p className="text-slate-600 leading-relaxed mb-8">
+                Pensée pour les organisations multi-entités
+                nécessitant un pilotage centralisé et des besoins récurrents.
               </p>
-              <p className="text-4xl font-bold text-[#F8B400] mb-6">1 290€ / an</p>
-              <ul className="text-sm text-left space-y-2">
-                <li>
-                  <CheckCircle2 className="inline w-4 h-4 text-[#F8B400]" /> Accès multi-utilisateurs illimité
+
+              <div className="text-5xl font-bold text-[#F8B400] mb-8">
+                1290€
+                <span className="text-lg text-slate-500 font-medium">
+                  {" "} / an
+                </span>
+              </div>
+
+              <ul className="space-y-4 text-slate-700">
+
+                <li className="flex gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[#F8B400]" />
+                  Accès multi-utilisateurs
                 </li>
-                <li>
-                  <CheckCircle2 className="inline w-4 h-4 text-[#F8B400]" /> Suivi et reporting centralisé
+
+                <li className="flex gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[#F8B400]" />
+                  Reporting & suivi centralisé
                 </li>
-                <li>
-                  <CheckCircle2 className="inline w-4 h-4 text-[#F8B400]" /> Support prioritaire plateforme (ITERIUM PARTNERS n’intervient pas dans l’exécution des missions)
+
+                <li className="flex gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[#F8B400]" />
+                  Priorisation des mises en relation
                 </li>
+
               </ul>
+
             </div>
+
           </div>
+
         </div>
+
       </section>
 
       {/* CTA FINAL */}
-      <section className="text-center py-16 bg-[#0A2942] text-white">
-        <h2 className="text-3xl font-bold mb-4">
-          Besoin d’un expert disponible maintenant ?
-        </h2>
-        <p className="text-slate-300 mb-8">
-          Accédez en un clic à des experts qualifiés et disponibles immédiatement
-          pour vos besoins critiques.
-        </p>
-        <Link
-          href="/mon-espace"
-          className="bg-[#F8B400] text-[#0A2942] px-6 py-3 rounded-xl font-semibold hover:bg-yellow-400 transition inline-flex items-center gap-2"
-        >
-          Accéder à la plateforme <ArrowRight className="w-5 h-5" />
-        </Link>
+      <section className="bg-[#0A2942] text-white py-24">
+
+        <div className="max-w-4xl mx-auto px-6 text-center">
+
+          <Users className="w-14 h-14 text-[#F8B400] mx-auto mb-6" />
+
+          <h2 className="text-4xl font-bold mb-6">
+            Vous êtes un expert senior ?
+          </h2>
+
+          <p className="text-slate-300 text-lg leading-relaxed mb-10">
+            Rejoignez le réseau ITERIUM PARTNERS et accédez à des missions
+            stratégiques auprès de PME, ETI et grands groupes.
+          </p>
+
+          <Link
+            href="/expert"
+            className="inline-flex items-center gap-3 bg-[#F8B400] text-[#0A2942] px-8 py-4 rounded-2xl font-bold hover:bg-yellow-400 transition"
+          >
+            Rejoindre le réseau expert
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+
+        </div>
+
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-slate-600">
-          <div>© 2026 ITERIUM PARTNERS — Plateforme digitale IA B2B</div>
-          <nav className="flex items-center gap-4">
-            <Link href="/legal" className="hover:text-[#0A2942]">
+      <footer className="border-t bg-white">
+
+        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+
+          <div>
+            © 2026 ITERIUM PARTNERS — Plateforme IA B2B
+          </div>
+
+          <div className="flex items-center gap-5">
+
+            <Link
+              href="/legal"
+              className="hover:text-[#0A2942] transition"
+            >
               Mentions légales
             </Link>
-            <span className="opacity-40">•</span>
-            <Link href="/privacy" className="hover:text-[#0A2942]">
+
+            <Link
+              href="/privacy"
+              className="hover:text-[#0A2942] transition"
+            >
               Politique RGPD
             </Link>
-          </nav>
+
+          </div>
+
         </div>
+
       </footer>
+
     </main>
   );
 }
