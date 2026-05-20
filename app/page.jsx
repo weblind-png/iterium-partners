@@ -48,6 +48,23 @@ export default function HomePage() {
       </header>
 
       {/* HERO */}
+      {/* POSITIONNEMENT */}
+<section className="bg-white py-12 border-b">
+  <div className="max-w-5xl mx-auto px-6 text-center">
+
+    <p className="text-xl text-[#0A2942] font-semibold leading-relaxed">
+      ITERIUM PARTNERS réinvente l’accès à l’expertise senior.
+    </p>
+
+    <p className="mt-5 text-slate-600 text-lg leading-relaxed">
+      Contrairement aux modèles traditionnels de recrutement,
+      la plateforme permet une mise en relation directe entre entreprises
+      et experts indépendants, sans processus lourds ni marges excessives
+      sur l’embauche.
+    </p>
+
+  </div>
+</section>
       <section className="relative overflow-hidden bg-[#0A2942] text-white">
 
         <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
