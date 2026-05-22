@@ -41,10 +41,10 @@ export default function MentionsLegalesPage() {
           <strong>Directeur de la publication :</strong> Eric BLIND<br /><br />
           <strong>Email :</strong>{" "}
           <a
-            href="mailto:contact@itriumconseil.fr"
+            href="mailto:contact@itriumconseil.com"
             className="text-[#0A2942] hover:text-[#F8B400]"
           >
-            contact@itriumconseil.fr
+            contact@itriumconseil.com
           </a>
         </p>
 
@@ -112,10 +112,10 @@ export default function MentionsLegalesPage() {
           Règlement UE 2016/679). Le responsable du traitement des données est
           Eric BLIND, joignable à{" "}
           <a
-            href="mailto:contact@itriumconseil.fr"
+            href="mailto:contact@itriumconseil.com"
             className="text-[#0A2942] hover:text-[#F8B400]"
           >
-            contact@itriumconseil.fr
+            contact@itriumconseil.com
           </a>.
         </p>
 
