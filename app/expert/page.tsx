@@ -1,9 +1,16 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function ExpertPage() {
   const [form, setForm] = useState({
+    prenom: "",
     nom: "",
     email: "",
     telephone: "",
@@ -53,7 +60,7 @@ export default function ExpertPage() {
   const handleGoogleConnect = () => {
     // Ici, tu redirigeras plus tard vers ton API d'authentification Google
     // window.location.href = "/api/auth/google";
-    
+
     // Simulation visuelle pour le moment :
     setIsGoogleConnected(true);
   };
@@ -62,12 +69,6 @@ export default function ExpertPage() {
     e.preventDefault();
 
     try {
-      const formData = new FormData();
-      
-      Object.keys(form).forEach((key) => {
-        formData.append(key, form[key]);
-      });
-
       const selectedInterventions = Object.keys(interventionChoices)
         .filter((key) => interventionChoices[key])
         .map((key) => {
@@ -78,24 +79,33 @@ export default function ExpertPage() {
         })
         .join(", ");
 
-      formData.append("intervention", selectedInterventions);
-      
-      // On envoie le statut de synchronisation de l'agenda
-      formData.append("googleCalendarConnected", isGoogleConnected ? "true" : "false");
+      const { error } = await supabase.from("experts").insert([
+        {
+          prenom: form.prenom,
+          nom: form.nom,
+          email: form.email,
+          telephone: form.telephone,
+          linkedin: form.linkedin,
+          metier: form.metier,
+          experience: form.experience,
+          expertises: form.expertises,
+          localisation: form.localisation,
+          tjm: form.tjm,
+          disponibilite: selectedInterventions,
+          photo_url: null,
+          cv_url: null,
+          visible: false,
+        },
+      ]);
 
-      if (photoFile) {
-        formData.append("photo", photoFile);
-      }
-
-      const res = await fetch("/api/contact-expert", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (res.ok) {
+      if (error) {
+        console.error(error);
+        alert("Erreur lors de l'envoi.");
+      } else {
         alert("Votre candidature a bien été envoyée.");
 
         setForm({
+          prenom: "",
           nom: "",
           email: "",
           telephone: "",
@@ -114,8 +124,6 @@ export default function ExpertPage() {
         setPhotoFile(null);
         setPreviewUrl(null);
         setIsGoogleConnected(false);
-      } else {
-        alert("Erreur lors de l’envoi.");
       }
     } catch (error) {
       console.error(error);
@@ -129,7 +137,7 @@ export default function ExpertPage() {
 
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">
-            Rejoindre le réseau d’experts ITERIUM PARTNERS
+            Rejoindre le réseau d'experts ITERIUM PARTNERS
           </h1>
 
           <p className="text-slate-300 text-lg leading-relaxed">
@@ -144,15 +152,27 @@ export default function ExpertPage() {
           className="bg-white text-slate-800 rounded-3xl p-8 shadow-2xl space-y-5"
         >
 
-          <input
-            type="text"
-            name="nom"
-            placeholder="Nom / Prénom"
-            value={form.nom}
-            onChange={handleChange}
-            required
-            className="w-full border border-slate-300 rounded-xl p-4"
-          />
+          {/* Prénom et Nom sur la même ligne */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              name="prenom"
+              placeholder="Prénom"
+              value={form.prenom}
+              onChange={handleChange}
+              required
+              className="w-full border border-slate-300 rounded-xl p-4"
+            />
+            <input
+              type="text"
+              name="nom"
+              placeholder="Nom"
+              value={form.nom}
+              onChange={handleChange}
+              required
+              className="w-full border border-slate-300 rounded-xl p-4"
+            />
+          </div>
 
           <input
             type="email"
@@ -212,7 +232,7 @@ export default function ExpertPage() {
           />
 
           <div className="grid md:grid-cols-2 gap-4">
-            
+
             <select
               name="localisation"
               value={form.localisation}
@@ -220,9 +240,9 @@ export default function ExpertPage() {
               required
               className="w-full border border-slate-300 rounded-xl p-4 bg-white text-slate-800 appearance-none cursor-pointer"
             >
-              <option value="" disabled text-slate-400>Région principale de résidence</option>
-              
-              <g id="france-metropolitaine" label="France Métropolitaine">
+              <option value="" disabled>Région principale de résidence</option>
+
+              <optgroup label="France Métropolitaine">
                 <option value="Auvergne-Rhône-Alpes">Auvergne-Rhône-Alpes</option>
                 <option value="Bourgogne-Franche-Comté">Bourgogne-Franche-Comté</option>
                 <option value="Bretagne">Bretagne</option>
@@ -236,9 +256,9 @@ export default function ExpertPage() {
                 <option value="Occitanie">Occitanie</option>
                 <option value="Pays de la Loire">Pays de la Loire</option>
                 <option value="Provence-Alpes-Côte d'Azur">Provence-Alpes-Côte d'Azur</option>
-              </g>
+              </optgroup>
 
-              <g id="dom-tom" label="DROM-COM / International">
+              <optgroup label="DROM-COM / International">
                 <option value="Guadeloupe">Guadeloupe</option>
                 <option value="Guyane">Guyane</option>
                 <option value="La Réunion">La Réunion</option>
@@ -250,10 +270,10 @@ export default function ExpertPage() {
                 <option value="Saint-Pierre-et-Miquelon">Saint-Pierre-et-Miquelon</option>
                 <option value="Wallis-et-Futuna">Wallis-et-Futuna</option>
                 <option value="International / Autre">International / Étranger</option>
-              </g>
+              </optgroup>
             </select>
 
-            {/* SYNC GOOGLE AGENDA À LA PLACE DE L'ANCIEN INPUT DISPONIBILITÉ */}
+            {/* SYNC GOOGLE AGENDA */}
             <div className="w-full border border-slate-300 rounded-xl p-3 bg-slate-50 flex items-center justify-between">
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-slate-500">Disponibilités réelles :</span>
@@ -265,12 +285,11 @@ export default function ExpertPage() {
                 type="button"
                 onClick={handleGoogleConnect}
                 className={`text-xs font-bold py-2 px-3 rounded-lg transition flex items-center gap-2 ${
-                  isGoogleConnected 
-                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300" 
+                  isGoogleConnected
+                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                     : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-sm"
                 }`}
               >
-                {/* Icône Google simplifiée en SVG */}
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -333,17 +352,17 @@ export default function ExpertPage() {
             <label className="block text-sm font-bold text-slate-700 mb-3">
               Ajouter votre Photo (Carrée & Professionnelle)
             </label>
-            
+
             <div className="grid sm:grid-cols-2 gap-4 items-center">
               <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 bg-white rounded-xl p-4 text-center">
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   accept=".jpg,.jpeg,.png"
-                  className="hidden" 
+                  className="hidden"
                 />
-                
+
                 {previewUrl ? (
                   <div>
                     <img src={previewUrl} alt="Aperçu" className="w-20 h-20 object-cover rounded-xl mx-auto border" />
@@ -379,7 +398,7 @@ export default function ExpertPage() {
 
           <div className="bg-slate-100 border border-slate-200 rounded-2xl p-4 text-sm text-slate-600">
             Les informations transmises restent strictement confidentielles.
-            Les entreprises clientes n’accèdent pas directement à vos coordonnées
+            Les entreprises clientes n'accèdent pas directement à vos coordonnées
             avant validation de la mise en relation et contractualisation via
             ITERIUM PARTNERS.
           </div>
