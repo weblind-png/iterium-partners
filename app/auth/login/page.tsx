@@ -165,7 +165,7 @@ export default function LoginPage() {
                   placeholder="Prénom *"
                   value={form.prenom}
                   onChange={handleChange}
-                  className="w-full border border-slate-300 rounded-xl p-3 text-sm"
+                  className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
                 />
                 <input
                   type="text"
@@ -173,7 +173,7 @@ export default function LoginPage() {
                   placeholder="Nom *"
                   value={form.nom}
                   onChange={handleChange}
-                  className="w-full border border-slate-300 rounded-xl p-3 text-sm"
+                  className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
                 />
               </div>
               <input
@@ -182,7 +182,7 @@ export default function LoginPage() {
                 placeholder="Société (optionnel)"
                 value={form.societe}
                 onChange={handleChange}
-                className="w-full border border-slate-300 rounded-xl p-3 text-sm"
+                className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
               />
             </>
           )}
@@ -193,7 +193,7 @@ export default function LoginPage() {
             placeholder="Email professionnel *"
             value={form.email}
             onChange={handleChange}
-            className="w-full border border-slate-300 rounded-xl p-3 text-sm"
+            className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
           />
 
           <input
@@ -202,7 +202,7 @@ export default function LoginPage() {
             placeholder="Mot de passe *"
             value={form.password}
             onChange={handleChange}
-            className="w-full border border-slate-300 rounded-xl p-3 text-sm"
+            className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
           />
 
           {mode === "login" && (
