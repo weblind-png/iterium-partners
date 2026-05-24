@@ -23,7 +23,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Vérifier si l'utilisateur est déjà connecté
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -100,7 +99,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Mettre à jour le profil avec prénom, nom, société
     if (data.user) {
       await supabase
         .from("profiles")
@@ -121,6 +119,13 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#0A2942] flex items-center justify-center px-4 py-12">
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
+
+        {/* Retour accueil */}
+        <div className="text-center mb-4">
+          <a href="/" className="text-xs text-slate-400 hover:text-[#0A2942] transition">
+            ← Retour à l'accueil
+          </a>
+        </div>
 
         {/* Logo */}
         <div className="text-center mb-8">
