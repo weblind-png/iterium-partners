@@ -13,6 +13,7 @@ export default function ClientDashboard() {
   const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [filteredExperts, setFilteredExperts] = useState<any[]>([]);
+  const [demandes, setDemandes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,6 +42,15 @@ export default function ClientDashboard() {
       }
 
       setProfile(profileData);
+
+      // Charger les demandes du client
+      const { data: demandesData } = await supabase
+        .from("demandes")
+        .select("*, experts(prenom, nom, metier, photo_url)")
+        .eq("client_id", user.id)
+        .order("created_at", { ascending: false });
+
+      setDemandes(demandesData || []);
       setLoading(false);
     };
 
@@ -69,7 +79,6 @@ export default function ClientDashboard() {
       );
     });
 
-    // Score de pertinence
     const scored = results.map((expert) => {
       let score = 0;
       if (expert.metier?.toLowerCase().includes(query)) score += 3;
@@ -89,7 +98,6 @@ export default function ClientDashboard() {
 
   const handleContact = (expert: any) => {
     if (abonnement === "aucun") {
-      alert("Vous devez souscrire à un abonnement pour contacter un expert.");
       setActiveTab("abonnement");
       return;
     }
@@ -103,6 +111,9 @@ export default function ClientDashboard() {
       </div>
     );
   }
+
+  const demandesEnAttente = demandes.filter((d) => d.statut === "en_attente");
+  const demandesAcceptees = demandes.filter((d) => d.statut === "acceptee");
 
   return (
     <div className="min-h-screen bg-[#f9fafb]">
@@ -129,10 +140,7 @@ export default function ClientDashboard() {
               {abonnement === "standard" && "✔ Standard"}
               {abonnement === "aucun" && "Sans abonnement"}
             </span>
-            <button
-              onClick={handleLogout}
-              className="text-xs text-slate-400 hover:text-white transition"
-            >
+            <button onClick={handleLogout} className="text-xs text-slate-400 hover:text-white transition">
               Déconnexion
             </button>
           </div>
@@ -153,7 +161,16 @@ export default function ClientDashboard() {
               }`}
             >
               {tab === "recherche" && "🔍 Rechercher un expert"}
-              {tab === "demandes" && "📬 Mes demandes"}
+              {tab === "demandes" && (
+                <span className="flex items-center gap-2">
+                  📬 Mes demandes
+                  {demandesEnAttente.length > 0 && (
+                    <span className="bg-yellow-400 text-[#0A2942] text-xs font-bold px-1.5 py-0.5 rounded-full">
+                      {demandesEnAttente.length}
+                    </span>
+                  )}
+                </span>
+              )}
               {tab === "contrats" && "📄 Mes contrats"}
               {tab === "abonnement" && "💳 Mon abonnement"}
             </button>
@@ -167,14 +184,10 @@ export default function ClientDashboard() {
         {/* ONGLET RECHERCHE */}
         {activeTab === "recherche" && (
           <div className="space-y-6">
-
-            {/* Barre de recherche IA */}
             <div className="bg-white rounded-3xl shadow p-6">
-              <h2 className="text-xl font-bold text-[#0A2942] mb-1">
-                🤖 Recherche IA d'experts
-              </h2>
+              <h2 className="text-xl font-bold text-[#0A2942] mb-1">🤖 Recherche IA d'experts</h2>
               <p className="text-slate-500 text-sm mb-4">
-                Décrivez votre besoin en quelques mots et notre IA sélectionne les meilleurs profils immédiatement disponibles.
+                Décrivez votre besoin en quelques mots et notre IA sélectionne les meilleurs profils.
               </p>
               <div className="flex gap-3">
                 <input
@@ -195,22 +208,18 @@ export default function ClientDashboard() {
               </div>
             </div>
 
-            {/* Etat initial — pas encore de recherche */}
             {!hasSearched && (
               <div className="bg-white rounded-3xl shadow p-12 text-center">
                 <p className="text-6xl mb-4">🎯</p>
-                <h3 className="text-xl font-bold text-[#0A2942] mb-2">
-                  Trouvez votre expert en quelques secondes
-                </h3>
+                <h3 className="text-xl font-bold text-[#0A2942] mb-2">Trouvez votre expert en quelques secondes</h3>
                 <p className="text-slate-500 text-sm max-w-md mx-auto">
                   Décrivez votre besoin ci-dessus : type de mission, compétences recherchées, urgence, localisation...
-                  Notre IA analyse et sélectionne les meilleurs profils disponibles.
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center mt-6">
                   {["RSSI NIS2", "DSI de transition", "DAF groupe", "CTO startup", "Expert SAP", "Audit cybersécurité"].map((suggestion) => (
                     <button
                       key={suggestion}
-                      onClick={() => { setSearchQuery(suggestion); }}
+                      onClick={() => setSearchQuery(suggestion)}
                       className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full transition"
                     >
                       {suggestion}
@@ -220,28 +229,12 @@ export default function ClientDashboard() {
               </div>
             )}
 
-            {/* Résultats recherche */}
             {hasSearched && (
               <>
-                {abonnement === "aucun" && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center">
-                    <p className="text-yellow-800 font-semibold mb-2">⚠️ Abonnement requis</p>
-                    <p className="text-yellow-700 text-sm mb-4">
-                      Souscrivez à un abonnement pour accéder aux profils complets et contacter les experts.
-                    </p>
-                    <button
-                      onClick={() => setActiveTab("abonnement")}
-                      className="bg-[#F8B400] text-[#0A2942] font-bold px-6 py-2 rounded-xl hover:bg-yellow-400 transition text-sm"
-                    >
-                      Voir les formules
-                    </button>
-                  </div>
-                )}
-
                 {filteredExperts.length === 0 ? (
                   <div className="bg-white rounded-3xl shadow p-12 text-center text-slate-400">
                     <p className="text-4xl mb-4">🔍</p>
-                    <p className="font-semibold text-slate-600">Aucun expert trouvé pour cette recherche</p>
+                    <p className="font-semibold text-slate-600">Aucun expert trouvé</p>
                     <p className="text-sm mt-1">Essayez avec d'autres mots clés</p>
                   </div>
                 ) : (
@@ -252,8 +245,6 @@ export default function ClientDashboard() {
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filteredExperts.map((expert) => (
                         <div key={expert.id} className="bg-white rounded-2xl shadow p-6 flex flex-col items-center text-center hover:shadow-lg transition">
-
-                          {/* Photo */}
                           <div className="w-20 h-20 rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden mb-3 flex items-center justify-center">
                             {expert.photo_url ? (
                               <img src={expert.photo_url} alt={expert.prenom} className="w-full h-full object-cover" />
@@ -263,29 +254,20 @@ export default function ClientDashboard() {
                               </svg>
                             )}
                           </div>
-
                           <p className="font-bold text-[#0A2942]">{expert.prenom} {expert.nom?.charAt(0)}.</p>
                           <p className="text-sm text-slate-500 mb-2">{expert.metier}</p>
-
-                          {/* Badges */}
                           <div className="flex flex-wrap gap-1 justify-center mb-2">
                             <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">✔ Expert Vérifié</span>
                             {expert.disponibilite && (
                               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">🟢 Disponible</span>
                             )}
                           </div>
-
                           <p className="text-xs text-slate-400 mb-1">📍 {expert.localisation}</p>
                           <p className="text-xs font-semibold text-[#0A2942] mb-2">💶 {expert.tjm} €/jour</p>
                           <p className="text-xs text-slate-500 mb-4 line-clamp-2">{expert.expertises}</p>
-
-                          {/* Score IA */}
                           {expert.score > 0 && (
-                            <p className="text-xs font-bold text-[#F8B400] mb-3">
-                              🤖 Score IA : {expert.score}/6
-                            </p>
+                            <p className="text-xs font-bold text-[#F8B400] mb-3">🤖 Score IA : {expert.score}/6</p>
                           )}
-
                           <button
                             onClick={() => handleContact(expert)}
                             className={`w-full py-2 rounded-xl text-sm font-bold transition ${
@@ -308,13 +290,74 @@ export default function ClientDashboard() {
 
         {/* ONGLET DEMANDES */}
         {activeTab === "demandes" && (
-          <div className="bg-white rounded-3xl shadow p-8">
-            <h2 className="text-xl font-bold text-[#0A2942] mb-6">Mes demandes de contact</h2>
-            <div className="text-center py-12 text-slate-400">
-              <p className="text-4xl mb-4">📬</p>
-              <p className="font-semibold">Aucune demande en cours</p>
-              <p className="text-sm mt-1">Vos demandes de mise en relation apparaîtront ici</p>
-            </div>
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-[#0A2942]">Mes demandes de contact</h2>
+
+            {demandes.length === 0 ? (
+              <div className="bg-white rounded-3xl shadow p-12 text-center text-slate-400">
+                <p className="text-4xl mb-4">📬</p>
+                <p className="font-semibold">Aucune demande envoyée</p>
+                <p className="text-sm mt-1">Recherchez un expert et envoyez votre première demande</p>
+                <button
+                  onClick={() => setActiveTab("recherche")}
+                  className="mt-4 bg-[#F8B400] text-[#0A2942] font-bold px-6 py-2 rounded-xl hover:bg-yellow-400 transition text-sm"
+                >
+                  Rechercher un expert
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {demandes.map((demande) => (
+                  <div key={demande.id} className={`bg-white rounded-2xl shadow p-6 border-l-4 ${
+                    demande.statut === "acceptee" ? "border-emerald-400" :
+                    demande.statut === "refusee" ? "border-red-300" :
+                    "border-yellow-400"
+                  }`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center shrink-0">
+                          {demande.experts?.photo_url ? (
+                            <img src={demande.experts.photo_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <svg className="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-[#0A2942]">
+                            {demande.experts?.prenom} {demande.experts?.nom?.charAt(0)}.
+                          </p>
+                          <p className="text-xs text-slate-500">{demande.experts?.metier}</p>
+                          <p className="text-xs text-slate-400">
+                            {new Date(demande.created_at).toLocaleDateString("fr-FR")}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                        demande.statut === "acceptee" ? "bg-emerald-100 text-emerald-700" :
+                        demande.statut === "refusee" ? "bg-red-100 text-red-700" :
+                        "bg-yellow-100 text-yellow-700"
+                      }`}>
+                        {demande.statut === "acceptee" && "✅ Acceptée"}
+                        {demande.statut === "refusee" && "❌ Refusée"}
+                        {demande.statut === "en_attente" && "⏳ En attente"}
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-xl p-3">
+                      <p className="text-sm text-slate-600 line-clamp-2">{demande.message}</p>
+                    </div>
+
+                    {demande.statut === "acceptee" && (
+                      <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-700">
+                        🎉 L'expert a accepté votre demande ! La prochaine étape est la génération du contrat de mise en relation.
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -335,15 +378,10 @@ export default function ClientDashboard() {
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-[#0A2942]">Mon abonnement</h2>
             <div className="grid md:grid-cols-2 gap-6">
-
-              <div className={`bg-white rounded-3xl shadow p-8 border-2 ${
-                abonnement === "standard" ? "border-[#0A2942]" : "border-transparent"
-              }`}>
+              <div className={`bg-white rounded-3xl shadow p-8 border-2 ${abonnement === "standard" ? "border-[#0A2942]" : "border-transparent"}`}>
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-[#0A2942]">Forfait Essentiel</h3>
-                  <p className="text-3xl font-bold text-[#0A2942] mt-2">
-                    290€ <span className="text-sm font-normal text-slate-500">/mois</span>
-                  </p>
+                  <p className="text-3xl font-bold text-[#0A2942] mt-2">290€ <span className="text-sm font-normal text-slate-500">/mois</span></p>
                 </div>
                 <ul className="space-y-2 text-sm text-slate-600 mb-6">
                   <li>✅ Accès moteur de recherche IA</li>
@@ -355,21 +393,15 @@ export default function ClientDashboard() {
                 {abonnement === "standard" ? (
                   <div className="text-center text-sm font-bold text-emerald-600">✔ Votre abonnement actuel</div>
                 ) : (
-                  <button className="w-full bg-[#0A2942] text-white font-bold py-3 rounded-2xl hover:bg-slate-800 transition">
-                    Souscrire
-                  </button>
+                  <button className="w-full bg-[#0A2942] text-white font-bold py-3 rounded-2xl hover:bg-slate-800 transition">Souscrire</button>
                 )}
               </div>
 
-              <div className={`bg-[#0A2942] rounded-3xl shadow p-8 border-2 ${
-                abonnement === "premium" ? "border-[#F8B400]" : "border-transparent"
-              }`}>
+              <div className={`bg-[#0A2942] rounded-3xl shadow p-8 border-2 ${abonnement === "premium" ? "border-[#F8B400]" : "border-transparent"}`}>
                 <div className="text-center mb-6">
                   <span className="text-xs bg-[#F8B400] text-[#0A2942] font-bold px-3 py-1 rounded-full">⭐ PREMIUM</span>
                   <h3 className="text-xl font-bold text-white mt-3">Forfait Groupe</h3>
-                  <p className="text-3xl font-bold text-[#F8B400] mt-2">
-                    890€ <span className="text-sm font-normal text-slate-400">/mois</span>
-                  </p>
+                  <p className="text-3xl font-bold text-[#F8B400] mt-2">890€ <span className="text-sm font-normal text-slate-400">/mois</span></p>
                 </div>
                 <ul className="space-y-2 text-sm text-slate-300 mb-6">
                   <li>✅ Tout le forfait Essentiel</li>
@@ -382,12 +414,9 @@ export default function ClientDashboard() {
                 {abonnement === "premium" ? (
                   <div className="text-center text-sm font-bold text-[#F8B400]">✔ Votre abonnement actuel</div>
                 ) : (
-                  <button className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition">
-                    Souscrire
-                  </button>
+                  <button className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition">Souscrire</button>
                 )}
               </div>
-
             </div>
           </div>
         )}
