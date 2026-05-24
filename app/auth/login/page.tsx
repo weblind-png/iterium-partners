@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 
@@ -11,7 +11,7 @@ const supabase = createClient(
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register" | "expert">("login");
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -22,6 +22,33 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Vérifier si l'utilisateur est déjà connecté
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        redirectByRole(session.user.id);
+      }
+    };
+    checkSession();
+  }, []);
+
+  const redirectByRole = async (userId: string) => {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (profile?.role === "admin") {
+      router.push("/admin/dashboard");
+    } else if (profile?.role === "expert") {
+      router.push("/expert/dashboard");
+    } else {
+      router.push("/client/dashboard");
+    }
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -42,23 +69,7 @@ export default function LoginPage() {
       return;
     }
 
-    // Récupérer le rôle de l'utilisateur
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
-
-    if (profile?.role === "admin") {
-      router.push("/admin/dashboard");
-    } else if (profile?.role === "expert") {
-      router.push("/expert/dashboard");
-    } else if (profile?.role === "client") {
-      router.push("/client/dashboard");
-    } else {
-      router.push("/");
-    }
-
+    await redirectByRole(data.user.id);
     setLoading(false);
   };
 
@@ -78,7 +89,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Créer le compte Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
@@ -90,42 +100,40 @@ export default function LoginPage() {
       return;
     }
 
-    // Créer le profil dans la table profiles
+    // Mettre à jour le profil avec prénom, nom, société
     if (data.user) {
-      const { error: profileError } = await supabase.from("profiles").insert([{
-        id: data.user.id,
-        role: "client",
-        prenom: form.prenom,
-        nom: form.nom,
-        email: form.email,
-        societe: form.societe,
-      }]);
-
-      if (profileError) {
-        setError("Erreur lors de la création du profil.");
-        setLoading(false);
-        return;
-      }
+      await supabase
+        .from("profiles")
+        .update({
+          prenom: form.prenom,
+          nom: form.nom,
+          email: form.email,
+          societe: form.societe,
+          role: "client",
+        })
+        .eq("id", data.user.id);
     }
 
-    setSuccess("Compte créé ! Vérifiez votre email pour confirmer votre inscription.");
+    setSuccess("✅ Compte créé ! Vérifiez votre email pour confirmer votre inscription, puis connectez-vous.");
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-[#0A2942] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#0A2942] flex items-center justify-center px-4 py-12">
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
 
         {/* Logo */}
         <div className="text-center mb-8">
           <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-12 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-[#0A2942]">
-            {mode === "login" ? "Connexion" : "Créer un compte client"}
+            {mode === "login" && "Connexion"}
+            {mode === "register" && "Créer un compte client"}
+            {mode === "expert" && "Espace Expert"}
           </h1>
           <p className="text-slate-500 text-sm mt-1">
-            {mode === "login"
-              ? "Accédez à votre espace ITERIUM PARTNERS"
-              : "Rejoignez la plateforme premium"}
+            {mode === "login" && "Accédez à votre espace ITERIUM PARTNERS"}
+            {mode === "register" && "Rejoignez la plateforme premium"}
+            {mode === "expert" && "Vous êtes un expert senior ?"}
           </p>
         </div>
 
@@ -133,7 +141,7 @@ export default function LoginPage() {
         <div className="flex rounded-xl overflow-hidden border border-slate-200 mb-6">
           <button
             onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
-            className={`flex-1 py-2 text-sm font-semibold transition ${
+            className={`flex-1 py-2 text-xs font-semibold transition ${
               mode === "login"
                 ? "bg-[#0A2942] text-white"
                 : "bg-white text-slate-600 hover:bg-slate-50"
@@ -143,7 +151,7 @@ export default function LoginPage() {
           </button>
           <button
             onClick={() => { setMode("register"); setError(""); setSuccess(""); }}
-            className={`flex-1 py-2 text-sm font-semibold transition ${
+            className={`flex-1 py-2 text-xs font-semibold transition border-x border-slate-200 ${
               mode === "register"
                 ? "bg-[#0A2942] text-white"
                 : "bg-white text-slate-600 hover:bg-slate-50"
@@ -151,104 +159,165 @@ export default function LoginPage() {
           >
             Nouveau client
           </button>
+          <button
+            onClick={() => { setMode("expert"); setError(""); setSuccess(""); }}
+            className={`flex-1 py-2 text-xs font-semibold transition ${
+              mode === "expert"
+                ? "bg-[#F8B400] text-[#0A2942]"
+                : "bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            Je suis expert
+          </button>
         </div>
 
-        {/* Formulaire */}
-        <div className="space-y-4">
-
-          {mode === "register" && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  name="prenom"
-                  placeholder="Prénom *"
-                  value={form.prenom}
-                  onChange={handleChange}
-                  className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
-                />
-                <input
-                  type="text"
-                  name="nom"
-                  placeholder="Nom *"
-                  value={form.nom}
-                  onChange={handleChange}
-                  className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
-                />
-              </div>
-              <input
-                type="text"
-                name="societe"
-                placeholder="Société (optionnel)"
-                value={form.societe}
-                onChange={handleChange}
-                className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
-              />
-            </>
-          )}
-
-          <input
-            type="email"
-            name="email"
-            placeholder="Email professionnel *"
-            value={form.email}
-            onChange={handleChange}
-            className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
-          />
-
-          <input
-            type="password"
-            name="password"
-            placeholder="Mot de passe *"
-            value={form.password}
-            onChange={handleChange}
-            className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
-          />
-
-          {mode === "login" && (
+        {/* FORMULAIRE CONNEXION */}
+        {mode === "login" && (
+          <div className="space-y-4">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email professionnel *"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Mot de passe *"
+              value={form.password}
+              onChange={handleChange}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+              className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
+            />
             <div className="text-right">
               <a href="/auth/reset-password" className="text-xs text-[#0A2942] hover:text-[#F8B400]">
                 Mot de passe oublié ?
               </a>
             </div>
-          )}
 
-          {/* Messages */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">
-              {error}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">
+                {error}
+              </div>
+            )}
+
+            <button
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50"
+            >
+              {loading ? "Connexion..." : "Se connecter"}
+            </button>
+          </div>
+        )}
+
+        {/* FORMULAIRE INSCRIPTION CLIENT */}
+        {mode === "register" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                name="prenom"
+                placeholder="Prénom *"
+                value={form.prenom}
+                onChange={handleChange}
+                className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
+              />
+              <input
+                type="text"
+                name="nom"
+                placeholder="Nom *"
+                value={form.nom}
+                onChange={handleChange}
+                className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
+              />
             </div>
-          )}
-          {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-3">
-              {success}
-            </div>
-          )}
+            <input
+              type="text"
+              name="societe"
+              placeholder="Société (optionnel)"
+              value={form.societe}
+              onChange={handleChange}
+              className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email professionnel *"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Mot de passe * (8 caractères min)"
+              value={form.password}
+              onChange={handleChange}
+              className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 bg-white"
+            />
 
-          {/* Bouton */}
-          <button
-            onClick={mode === "login" ? handleLogin : handleRegister}
-            disabled={loading}
-            className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50"
-          >
-            {loading
-              ? "Chargement..."
-              : mode === "login"
-              ? "Se connecter"
-              : "Créer mon compte"}
-          </button>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-3">
+                {success}
+              </div>
+            )}
 
-          {/* Séparateur expert */}
-          <div className="border-t border-slate-200 pt-4 text-center">
-            <p className="text-xs text-slate-500">
-              Vous êtes un expert ?{" "}
-              <a href="/expert" className="text-[#0A2942] font-semibold hover:text-[#F8B400]">
-                Rejoindre le réseau →
-              </a>
+            <button
+              onClick={handleRegister}
+              disabled={loading}
+              className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50"
+            >
+              {loading ? "Création..." : "Créer mon compte client"}
+            </button>
+
+            <p className="text-xs text-slate-400 text-center">
+              En créant un compte, vous acceptez nos{" "}
+              <a href="/legal/conditions" className="underline hover:text-[#0A2942]">CGU</a>{" "}
+              et notre{" "}
+              <a href="/privacy" className="underline hover:text-[#0A2942]">politique de confidentialité</a>.
             </p>
           </div>
+        )}
 
-        </div>
+        {/* ESPACE EXPERT */}
+        {mode === "expert" && (
+          <div className="space-y-4 text-center">
+            <div className="bg-slate-50 rounded-2xl p-6">
+              <p className="text-4xl mb-3">🏅</p>
+              <p className="text-slate-700 text-sm leading-relaxed mb-4">
+                Vous êtes un expert senior et souhaitez rejoindre le réseau ITERIUM PARTNERS ?
+                L'inscription est <strong>gratuite</strong> et votre profil sera validé par nos équipes.
+              </p>
+              <a
+                href="/expert"
+                className="block w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition text-sm"
+              >
+                Rejoindre le réseau d'experts →
+              </a>
+            </div>
+
+            <div className="border-t border-slate-200 pt-4">
+              <p className="text-xs text-slate-500 mb-3">
+                Déjà inscrit comme expert ? Connectez-vous ici :
+              </p>
+              <button
+                onClick={() => setMode("login")}
+                className="w-full border border-[#0A2942] text-[#0A2942] font-bold py-2 rounded-2xl hover:bg-slate-50 transition text-sm"
+              >
+                Se connecter
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
