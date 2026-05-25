@@ -381,7 +381,7 @@ export default function ClientDashboard() {
               <div className={`bg-white rounded-3xl shadow p-8 border-2 ${abonnement === "standard" ? "border-[#0A2942]" : "border-transparent"}`}>
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-[#0A2942]">Forfait Essentiel</h3>
-                  <p className="text-3xl font-bold text-[#0A2942] mt-2">290€ <span className="text-sm font-normal text-slate-500">/mois</span></p>
+                  <p className="text-3xl font-bold text-[#0A2942] mt-2">199€ <span className="text-sm font-normal text-slate-500">/mois</span></p>
                 </div>
                 <ul className="space-y-2 text-sm text-slate-600 mb-6">
                   <li>✅ Accès moteur de recherche IA</li>
@@ -401,7 +401,7 @@ export default function ClientDashboard() {
                 <div className="text-center mb-6">
                   <span className="text-xs bg-[#F8B400] text-[#0A2942] font-bold px-3 py-1 rounded-full">⭐ PREMIUM</span>
                   <h3 className="text-xl font-bold text-white mt-3">Forfait Groupe</h3>
-                  <p className="text-3xl font-bold text-[#F8B400] mt-2">890€ <span className="text-sm font-normal text-slate-400">/mois</span></p>
+                  <p className="text-3xl font-bold text-[#F8B400] mt-2">490€ <span className="text-sm font-normal text-slate-400">/mois</span></p>
                 </div>
                 <ul className="space-y-2 text-sm text-slate-300 mb-6">
                   <li>✅ Tout le forfait Essentiel</li>
