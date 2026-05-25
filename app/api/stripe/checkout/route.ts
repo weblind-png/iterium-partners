@@ -7,7 +7,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
-    const { priceId, clientId, email } = await request.json();
+    const { forfait, clientId, email } = await request.json();
+
+    const priceId = forfait === "standard"
+      ? process.env.STRIPE_PRICE_ESSENTIEL
+      : process.env.STRIPE_PRICE_GROUPE;
 
     if (!priceId || !clientId || !email) {
       return NextResponse.json(
@@ -20,15 +24,8 @@ export async function POST(request: NextRequest) {
       payment_method_types: ["card"],
       mode: "subscription",
       customer_email: email,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      metadata: {
-        clientId,
-      },
+      line_items: [{ price: priceId, quantity: 1 }],
+      metadata: { clientId },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/client/dashboard?abonnement=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/client/dashboard?abonnement=cancel`,
     });
@@ -36,9 +33,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
     console.error("Stripe error:", error);
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
