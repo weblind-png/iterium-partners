@@ -19,7 +19,8 @@ export default function ClientDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [activeTab, setActiveTab] = useState("recherche");
-  const [abonnement, setAbonnement] = useState<"aucun" | "standard" | "premium">("standard");
+  const [abonnement, setAbonnement] = useState<"aucun" | "standard" | "premium">("aucun");
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,7 +44,19 @@ export default function ClientDashboard() {
 
       setProfile(profileData);
 
-      // Charger les demandes du client
+      // Vérifier statut abonnement depuis Supabase
+      if (profileData.abonnement === "standard") setAbonnement("standard");
+      else if (profileData.abonnement === "premium") setAbonnement("premium");
+      else setAbonnement("aucun");
+
+      // Vérifier si retour de Stripe
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("abonnement") === "success") {
+        setAbonnement("standard");
+        setActiveTab("recherche");
+      }
+
+      // Charger les demandes
       const { data: demandesData } = await supabase
         .from("demandes")
         .select("*, experts(prenom, nom, metier, photo_url)")
@@ -57,9 +70,40 @@ export default function ClientDashboard() {
     fetchData();
   }, []);
 
+  const handleStripeCheckout = async (forfait: "standard" | "premium") => {
+    setCheckoutLoading(forfait);
+
+    const priceId = forfait === "standard"
+      ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ESSENTIEL
+      : process.env.NEXT_PUBLIC_STRIPE_PRICE_GROUPE;
+
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          priceId,
+          clientId: profile.id,
+          email: profile.email,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Erreur lors de la création du paiement.");
+      }
+    } catch (error) {
+      alert("Erreur réseau.");
+    }
+
+    setCheckoutLoading(null);
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
-
     setSearching(true);
     setHasSearched(true);
 
@@ -69,15 +113,13 @@ export default function ClientDashboard() {
       .eq("visible", true);
 
     const query = searchQuery.toLowerCase();
-    const results = (experts || []).filter((expert) => {
-      return (
-        expert.metier?.toLowerCase().includes(query) ||
-        expert.expertises?.toLowerCase().includes(query) ||
-        expert.experience?.toLowerCase().includes(query) ||
-        expert.localisation?.toLowerCase().includes(query) ||
-        expert.disponibilite?.toLowerCase().includes(query)
-      );
-    });
+    const results = (experts || []).filter((expert) =>
+      expert.metier?.toLowerCase().includes(query) ||
+      expert.expertises?.toLowerCase().includes(query) ||
+      expert.experience?.toLowerCase().includes(query) ||
+      expert.localisation?.toLowerCase().includes(query) ||
+      expert.disponibilite?.toLowerCase().includes(query)
+    );
 
     const scored = results.map((expert) => {
       let score = 0;
@@ -113,7 +155,6 @@ export default function ClientDashboard() {
   }
 
   const demandesEnAttente = demandes.filter((d) => d.statut === "en_attente");
-  const demandesAcceptees = demandes.filter((d) => d.statut === "acceptee");
 
   return (
     <div className="min-h-screen bg-[#f9fafb]">
@@ -130,11 +171,9 @@ export default function ClientDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-              abonnement === "premium"
-                ? "bg-yellow-100 text-yellow-800"
-                : abonnement === "standard"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-slate-100 text-slate-600"
+              abonnement === "premium" ? "bg-yellow-100 text-yellow-800" :
+              abonnement === "standard" ? "bg-blue-100 text-blue-800" :
+              "bg-slate-100 text-slate-600"
             }`}>
               {abonnement === "premium" && "⭐ Premium"}
               {abonnement === "standard" && "✔ Standard"}
@@ -147,7 +186,7 @@ export default function ClientDashboard() {
         </div>
       </header>
 
-      {/* NAVIGATION ONGLETS */}
+      {/* NAVIGATION */}
       <div className="bg-white border-b">
         <div className="max-w-6xl mx-auto px-6 flex gap-6 overflow-x-auto">
           {["recherche", "demandes", "contrats", "abonnement"].map((tab) => (
@@ -155,9 +194,7 @@ export default function ClientDashboard() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`py-4 text-sm font-semibold border-b-2 transition whitespace-nowrap ${
-                activeTab === tab
-                  ? "border-[#F8B400] text-[#0A2942]"
-                  : "border-transparent text-slate-500 hover:text-[#0A2942]"
+                activeTab === tab ? "border-[#F8B400] text-[#0A2942]" : "border-transparent text-slate-500 hover:text-[#0A2942]"
               }`}
             >
               {tab === "recherche" && "🔍 Rechercher un expert"}
@@ -216,13 +253,10 @@ export default function ClientDashboard() {
                   Décrivez votre besoin ci-dessus : type de mission, compétences recherchées, urgence, localisation...
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center mt-6">
-                  {["RSSI NIS2", "DSI de transition", "DAF groupe", "CTO startup", "Expert SAP", "Audit cybersécurité"].map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      onClick={() => setSearchQuery(suggestion)}
-                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full transition"
-                    >
-                      {suggestion}
+                  {["RSSI NIS2", "DSI de transition", "DAF groupe", "CTO startup", "Expert SAP", "Audit cybersécurité"].map((s) => (
+                    <button key={s} onClick={() => setSearchQuery(s)}
+                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full transition">
+                      {s}
                     </button>
                   ))}
                 </div>
@@ -231,6 +265,19 @@ export default function ClientDashboard() {
 
             {hasSearched && (
               <>
+                {abonnement === "aucun" && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center">
+                    <p className="text-yellow-800 font-semibold mb-2">⚠️ Abonnement requis</p>
+                    <p className="text-yellow-700 text-sm mb-4">
+                      Souscrivez à un abonnement pour contacter les experts.
+                    </p>
+                    <button onClick={() => setActiveTab("abonnement")}
+                      className="bg-[#F8B400] text-[#0A2942] font-bold px-6 py-2 rounded-xl hover:bg-yellow-400 transition text-sm">
+                      Voir les formules
+                    </button>
+                  </div>
+                )}
+
                 {filteredExperts.length === 0 ? (
                   <div className="bg-white rounded-3xl shadow p-12 text-center text-slate-400">
                     <p className="text-4xl mb-4">🔍</p>
@@ -258,16 +305,12 @@ export default function ClientDashboard() {
                           <p className="text-sm text-slate-500 mb-2">{expert.metier}</p>
                           <div className="flex flex-wrap gap-1 justify-center mb-2">
                             <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">✔ Expert Vérifié</span>
-                            {expert.disponibilite && (
-                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">🟢 Disponible</span>
-                            )}
+                            {expert.disponibilite && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">🟢 Disponible</span>}
                           </div>
                           <p className="text-xs text-slate-400 mb-1">📍 {expert.localisation}</p>
                           <p className="text-xs font-semibold text-[#0A2942] mb-2">💶 {expert.tjm} €/jour</p>
                           <p className="text-xs text-slate-500 mb-4 line-clamp-2">{expert.expertises}</p>
-                          {expert.score > 0 && (
-                            <p className="text-xs font-bold text-[#F8B400] mb-3">🤖 Score IA : {expert.score}/6</p>
-                          )}
+                          {expert.score > 0 && <p className="text-xs font-bold text-[#F8B400] mb-3">🤖 Score IA : {expert.score}/6</p>}
                           <button
                             onClick={() => handleContact(expert)}
                             className={`w-full py-2 rounded-xl text-sm font-bold transition ${
@@ -292,16 +335,12 @@ export default function ClientDashboard() {
         {activeTab === "demandes" && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-[#0A2942]">Mes demandes de contact</h2>
-
             {demandes.length === 0 ? (
               <div className="bg-white rounded-3xl shadow p-12 text-center text-slate-400">
                 <p className="text-4xl mb-4">📬</p>
                 <p className="font-semibold">Aucune demande envoyée</p>
-                <p className="text-sm mt-1">Recherchez un expert et envoyez votre première demande</p>
-                <button
-                  onClick={() => setActiveTab("recherche")}
-                  className="mt-4 bg-[#F8B400] text-[#0A2942] font-bold px-6 py-2 rounded-xl hover:bg-yellow-400 transition text-sm"
-                >
+                <button onClick={() => setActiveTab("recherche")}
+                  className="mt-4 bg-[#F8B400] text-[#0A2942] font-bold px-6 py-2 rounded-xl hover:bg-yellow-400 transition text-sm">
                   Rechercher un expert
                 </button>
               </div>
@@ -310,8 +349,7 @@ export default function ClientDashboard() {
                 {demandes.map((demande) => (
                   <div key={demande.id} className={`bg-white rounded-2xl shadow p-6 border-l-4 ${
                     demande.statut === "acceptee" ? "border-emerald-400" :
-                    demande.statut === "refusee" ? "border-red-300" :
-                    "border-yellow-400"
+                    demande.statut === "refusee" ? "border-red-300" : "border-yellow-400"
                   }`}>
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
@@ -325,13 +363,9 @@ export default function ClientDashboard() {
                           )}
                         </div>
                         <div>
-                          <p className="font-bold text-[#0A2942]">
-                            {demande.experts?.prenom} {demande.experts?.nom?.charAt(0)}.
-                          </p>
+                          <p className="font-bold text-[#0A2942]">{demande.experts?.prenom} {demande.experts?.nom?.charAt(0)}.</p>
                           <p className="text-xs text-slate-500">{demande.experts?.metier}</p>
-                          <p className="text-xs text-slate-400">
-                            {new Date(demande.created_at).toLocaleDateString("fr-FR")}
-                          </p>
+                          <p className="text-xs text-slate-400">{new Date(demande.created_at).toLocaleDateString("fr-FR")}</p>
                         </div>
                       </div>
                       <span className={`text-xs font-bold px-2 py-1 rounded-full ${
@@ -344,11 +378,9 @@ export default function ClientDashboard() {
                         {demande.statut === "en_attente" && "⏳ En attente"}
                       </span>
                     </div>
-
                     <div className="bg-slate-50 rounded-xl p-3">
                       <p className="text-sm text-slate-600 line-clamp-2">{demande.message}</p>
                     </div>
-
                     {demande.statut === "acceptee" && (
                       <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-700">
                         🎉 L'expert a accepté votre demande ! La prochaine étape est la génération du contrat de mise en relation.
@@ -377,23 +409,41 @@ export default function ClientDashboard() {
         {activeTab === "abonnement" && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-[#0A2942]">Mon abonnement</h2>
+
+            {abonnement !== "aucun" && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-emerald-700 text-sm font-semibold">
+                ✅ Vous êtes abonné au forfait {abonnement === "standard" ? "Essentiel" : "Groupe"}. Merci pour votre confiance !
+              </div>
+            )}
+
             <div className="grid md:grid-cols-2 gap-6">
+
               <div className={`bg-white rounded-3xl shadow p-8 border-2 ${abonnement === "standard" ? "border-[#0A2942]" : "border-transparent"}`}>
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-[#0A2942]">Forfait Essentiel</h3>
-                  <p className="text-3xl font-bold text-[#0A2942] mt-2">199€ <span className="text-sm font-normal text-slate-500">/mois</span></p>
+                  <div className="mt-2">
+                    <span className="text-3xl font-bold text-[#0A2942]">199€</span>
+                    <span className="text-sm text-slate-500"> /mois</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">ou 1 990€/an (2 mois offerts)</p>
                 </div>
                 <ul className="space-y-2 text-sm text-slate-600 mb-6">
                   <li>✅ Accès moteur de recherche IA</li>
                   <li>✅ Consultation profils experts</li>
-                  <li>✅ 5 demandes de contact / mois</li>
-                  <li>✅ Génération contrat de mise en relation</li>
+                  <li>✅ 5 mises en relation / mois</li>
+                  <li>✅ Génération contrat automatique</li>
                   <li>✅ Support email</li>
                 </ul>
                 {abonnement === "standard" ? (
                   <div className="text-center text-sm font-bold text-emerald-600">✔ Votre abonnement actuel</div>
                 ) : (
-                  <button className="w-full bg-[#0A2942] text-white font-bold py-3 rounded-2xl hover:bg-slate-800 transition">Souscrire</button>
+                  <button
+                    onClick={() => handleStripeCheckout("standard")}
+                    disabled={checkoutLoading === "standard"}
+                    className="w-full bg-[#0A2942] text-white font-bold py-3 rounded-2xl hover:bg-slate-800 transition disabled:opacity-50"
+                  >
+                    {checkoutLoading === "standard" ? "Redirection..." : "Souscrire — 199€/mois"}
+                  </button>
                 )}
               </div>
 
@@ -401,22 +451,33 @@ export default function ClientDashboard() {
                 <div className="text-center mb-6">
                   <span className="text-xs bg-[#F8B400] text-[#0A2942] font-bold px-3 py-1 rounded-full">⭐ PREMIUM</span>
                   <h3 className="text-xl font-bold text-white mt-3">Forfait Groupe</h3>
-                  <p className="text-3xl font-bold text-[#F8B400] mt-2">490€ <span className="text-sm font-normal text-slate-400">/mois</span></p>
+                  <div className="mt-2">
+                    <span className="text-3xl font-bold text-[#F8B400]">490€</span>
+                    <span className="text-sm text-slate-400"> /mois</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">ou 4 900€/an (2 mois offerts)</p>
                 </div>
                 <ul className="space-y-2 text-sm text-slate-300 mb-6">
                   <li>✅ Tout le forfait Essentiel</li>
-                  <li>✅ Contacts illimités</li>
+                  <li>✅ Mises en relation illimitées</li>
                   <li>✅ Multi-utilisateurs</li>
-                  <li>✅ Reporting et suivi missions</li>
+                  <li>✅ Reporting & suivi missions</li>
                   <li>✅ Account manager dédié</li>
                   <li>✅ NDA automatique inclus</li>
                 </ul>
                 {abonnement === "premium" ? (
                   <div className="text-center text-sm font-bold text-[#F8B400]">✔ Votre abonnement actuel</div>
                 ) : (
-                  <button className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition">Souscrire</button>
+                  <button
+                    onClick={() => handleStripeCheckout("premium")}
+                    disabled={checkoutLoading === "premium"}
+                    className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50"
+                  >
+                    {checkoutLoading === "premium" ? "Redirection..." : "Souscrire — 490€/mois"}
+                  </button>
                 )}
               </div>
+
             </div>
           </div>
         )}
