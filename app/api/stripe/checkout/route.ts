@@ -1,25 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-06-20",
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(request: NextRequest) {
   try {
-   const { forfait, clientId, email } = await request.json();
+    const body = await request.json();
+    
+    console.log("Body reçu:", JSON.stringify(body));
+    console.log("PRICE_ESSENTIEL:", process.env.PRICE_ESSENTIEL);
+    console.log("PRICE_GROUPE:", process.env.PRICE_GROUPE);
 
-console.log("forfait:", forfait);
-console.log("clientId:", clientId);  
-console.log("email:", email);
-console.log("priceId calculé:", forfait === "standard" ? process.env.PRICE_ESSENTIEL : process.env.PRICE_GROUPE);
-    const { forfait, clientId, email } = await request.json();
+    const { forfait, clientId, email } = body;
+
+    console.log("forfait:", forfait);
+    console.log("clientId:", clientId);
+    console.log("email:", email);
 
     const priceId = forfait === "standard"
-  ? process.env.PRICE_ESSENTIEL
-  : process.env.PRICE_GROUPE;
-    
+      ? process.env.PRICE_ESSENTIEL
+      : process.env.PRICE_GROUPE;
+
+    console.log("priceId:", priceId);
+
     if (!priceId || !clientId || !email) {
+      console.log("Paramètre manquant - priceId:", priceId, "clientId:", clientId, "email:", email);
       return NextResponse.json(
         { error: "Paramètres manquants" },
         { status: 400 }
@@ -37,8 +42,9 @@ console.log("priceId calculé:", forfait === "standard" ? process.env.PRICE_ESSE
     });
 
     return NextResponse.json({ url: session.url });
+
   } catch (error: any) {
-    console.error("Stripe error:", error);
+    console.error("Stripe error complet:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
