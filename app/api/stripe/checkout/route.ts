@@ -7,8 +7,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("PRICE_ESSENTIEL:", process.env.PRICE_ESSENTIEL);
-    console.log("PRICE_GROUPE:", process.env.PRICE_GROUPE);
+   const { forfait, clientId, email } = await request.json();
+
+console.log("forfait:", forfait);
+console.log("clientId:", clientId);  
+console.log("email:", email);
+console.log("priceId calculé:", forfait === "standard" ? process.env.PRICE_ESSENTIEL : process.env.PRICE_GROUPE);
     const { forfait, clientId, email } = await request.json();
 
     const priceId = forfait === "standard"
