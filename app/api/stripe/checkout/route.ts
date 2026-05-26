@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
     const { forfait, clientId, email } = await request.json();
 
     const priceId = forfait === "standard"
-      ? process.env.STRIPE_PRICE_ESSENTIEL
-      : process.env.STRIPE_PRICE_GROUPE;
-
+  ? process.env.PRICE_ESSENTIEL
+  : process.env.PRICE_GROUPE;
+    
     if (!priceId || !clientId || !email) {
       return NextResponse.json(
         { error: "Paramètres manquants" },
