@@ -73,18 +73,16 @@ export default function ClientDashboard() {
   const handleStripeCheckout = async (forfait: "standard" | "premium") => {
     setCheckoutLoading(forfait);
 
-    const priceId = forfait === "standard"
-      ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ESSENTIEL
-      : process.env.NEXT_PUBLIC_STRIPE_PRICE_GROUPE;
-
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          priceId,
+          forfait,
           clientId: profile.id,
-          email: profile.email,
+          email: user?.email,
         }),
       });
 
