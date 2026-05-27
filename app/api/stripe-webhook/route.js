@@ -7,7 +7,7 @@ import PDFDocument from "pdfkit";
 import crypto from "crypto";
 import db from "@/lib/db";
 
-// ✅ Config Next.js 16
+// ✅ Config Next.js
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const preferredRegion = "auto";
@@ -37,6 +37,34 @@ export async function POST(req) {
     const stripeId = session.id;
 
     console.log(`✅ Paiement confirmé pour ${clientEmail} (${montant}€)`);
+
+    // ✅ Mise à jour abonnement Supabase
+    try {
+      const { createClient } = await import("@supabase/supabase-js");
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+
+      const clientId = session.metadata?.clientId;
+      if (clientId) {
+        const montantTotal = session.amount_total;
+        const forfait = montantTotal <= 19900 ? "standard" : "premium";
+
+        await supabase
+          .from("profiles")
+          .update({
+            abonnement: forfait,
+            stripe_customer_id: session.customer,
+            stripe_subscription_id: session.subscription,
+          })
+          .eq("id", clientId);
+
+        console.log(`✅ Abonnement ${forfait} activé pour client ${clientId}`);
+      }
+    } catch (supabaseErr) {
+      console.error("Erreur mise à jour Supabase :", supabaseErr);
+    }
 
     // === PRÉPARATION RÉPERTOIRES ===
     const baseExport = path.join(process.cwd(), "public", "exports");
@@ -93,7 +121,7 @@ export async function POST(req) {
         const stream = fs.createWriteStream(outputPath);
         doc.pipe(stream);
 
-        drawHeader(doc, "CONTRAT D’INTERVENTION / SERVICE AGREEMENT");
+        drawHeader(doc, "CONTRAT D'INTERVENTION / SERVICE AGREEMENT");
 
         doc.moveDown(2);
         doc.fontSize(12).fillColor("#000000");
@@ -105,8 +133,8 @@ export async function POST(req) {
 
         doc.fontSize(13).fillColor("#0A2942").text("Résumé de la mission / Mission Summary :", { underline: true });
         doc.fontSize(11).fillColor("#000000").text(
-          "Ce contrat formalise la mission validée entre le client et l’expert sélectionné via la plateforme Itrium Conseil.\n" +
-          "L’expert s’engage à réaliser la prestation dans les conditions convenues.\n\n" +
+          "Ce contrat formalise la mission validée entre le client et l'expert sélectionné via la plateforme Itrium Conseil.\n" +
+          "L'expert s'engage à réaliser la prestation dans les conditions convenues.\n\n" +
           "This agreement formalizes the assignment validated between the client and the expert selected via the Itrium Conseil platform.\n" +
           "The expert commits to perform the service under the agreed conditions."
         );
@@ -119,9 +147,9 @@ export async function POST(req) {
 
         doc.moveDown(2);
         doc.fontSize(9).fillColor("#555555").text(
-          "Note : Itrium Conseil agit uniquement en tant que plateforme d’intermédiation numérique entre le client et l’expert.\n" +
+          "Note : Itrium Conseil agit uniquement en tant que plateforme d'intermédiation numérique entre le client et l'expert.\n" +
           "Ce document constitue un accord direct entre les deux parties.\n" +
-          "Itrium Conseil ne peut être tenu responsable de l’exécution de la prestation.\n\n" +
+          "Itrium Conseil ne peut être tenu responsable de l'exécution de la prestation.\n\n" +
           "Notice: Itrium Conseil acts solely as a digital intermediary platform between the client and the expert.\n" +
           "This document represents a direct agreement between both parties.\n" +
           "Itrium Conseil cannot be held liable for the execution of the service.",
@@ -176,8 +204,8 @@ export async function POST(req) {
 
         doc.moveDown(2);
         doc.fontSize(9).fillColor("#666666").text(
-          "Itrium Conseil - Société de services informatiques et plateforme B2B / IT Services & B2B Platform\n" +
-          "SIRET : 123 456 789 00010 | TVA : FR12 123456789 | contact@itriumconseil.fr",
+          "ITERIUM PARTNERS (BLIND ERIC) - Plateforme IA B2B de mise en relation experts & entreprises\n" +
+          "SIRET : 522 800 226 00030 | TVA : FR27522800226 | contact@itriumconseil.com",
           { align: "center" }
         );
 
@@ -214,12 +242,12 @@ export async function POST(req) {
     try {
       const cguPath = path.join(process.cwd(), "public", "legal", "CGU_Itrium_Conseil.pdf");
       await transporter.sendMail({
-        from: `"Itrium Conseil" <${process.env.EMAIL_USER}>`,
+        from: `"ITERIUM PARTNERS" <${process.env.EMAIL_USER}>`,
         to: [clientEmail, process.env.EMAIL_USER],
-        subject: "Votre contrat et facture / Your Contract and Invoice - Itrium Conseil",
-        text: `Bonjour ${clientName},\n\nVotre paiement de ${montant}€ a bien été reçu.\nVeuillez trouver ci-joint votre contrat et votre facture bilingues.\n\nEmpreinte du contrat : ${hash}\nDate : ${date}\n\nThank you for your trust.\nBest regards,\nItrium Conseil Team.`,
+        subject: "Votre contrat et facture / Your Contract and Invoice - ITERIUM PARTNERS",
+        text: `Bonjour ${clientName},\n\nVotre paiement de ${montant}€ a bien été reçu.\nVeuillez trouver ci-joint votre contrat et votre facture bilingues.\n\nEmpreinte du contrat : ${hash}\nDate : ${date}\n\nThank you for your trust.\nBest regards,\nITERIUM PARTNERS Team.`,
         attachments: [
-          { filename: "CGU_Itrium_Conseil.pdf", path: cguPath },
+          { filename: "CGU_Iterium_Partners.pdf", path: cguPath },
           { filename: path.basename(contratPath), path: contratPath },
           { filename: path.basename(facturePath), path: facturePath },
         ],
@@ -239,6 +267,29 @@ export async function POST(req) {
       console.log("💾 Paiement enregistré dans la base !");
     } catch (dbErr) {
       console.error("Erreur enregistrement BDD :", dbErr);
+    }
+  }
+
+  // --- Abonnement annulé ---
+  if (event.type === "customer.subscription.deleted") {
+    try {
+      const { createClient } = await import("@supabase/supabase-js");
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+
+      const subscription = event.data.object;
+      const customerId = subscription.customer;
+
+      await supabase
+        .from("profiles")
+        .update({ abonnement: "aucun" })
+        .eq("stripe_customer_id", customerId);
+
+      console.log(`❌ Abonnement annulé pour customer ${customerId}`);
+    } catch (err) {
+      console.error("Erreur annulation abonnement Supabase :", err);
     }
   }
 
