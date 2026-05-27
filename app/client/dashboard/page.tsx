@@ -20,7 +20,6 @@ export default function ClientDashboard() {
   const [hasSearched, setHasSearched] = useState(false);
   const [activeTab, setActiveTab] = useState("recherche");
   const [abonnement, setAbonnement] = useState<"aucun" | "standard" | "premium">("aucun");
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,19 +43,16 @@ export default function ClientDashboard() {
 
       setProfile(profileData);
 
-      // Vérifier statut abonnement depuis Supabase
       if (profileData.abonnement === "standard") setAbonnement("standard");
       else if (profileData.abonnement === "premium") setAbonnement("premium");
       else setAbonnement("aucun");
 
-      // Vérifier si retour de Stripe
       const params = new URLSearchParams(window.location.search);
       if (params.get("abonnement") === "success") {
         setAbonnement("standard");
         setActiveTab("recherche");
       }
 
-      // Charger les demandes
       const { data: demandesData } = await supabase
         .from("demandes")
         .select("*, experts(prenom, nom, metier, photo_url)")
@@ -70,34 +66,13 @@ export default function ClientDashboard() {
     fetchData();
   }, []);
 
-  const handleStripeCheckout = async (forfait: "standard" | "premium") => {
-    setCheckoutLoading(forfait);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          forfait,
-          clientId: profile.id,
-          email: user?.email,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Erreur lors de la création du paiement.");
-      }
-    } catch (error) {
-      alert("Erreur réseau.");
+  // ✅ SOLUTION SIMPLE : liens directs Stripe
+  const handleStripeCheckout = (forfait: "standard" | "premium") => {
+    if (forfait === "standard") {
+      window.location.href = "https://buy.stripe.com/aFaeV5eKA1yiaAS4jHbsc06";
+    } else {
+      window.location.href = "https://buy.stripe.com/5kQfZ9byo1yigZg7vTbsc07";
     }
-
-    setCheckoutLoading(null);
   };
 
   const handleSearch = async () => {
@@ -437,10 +412,9 @@ export default function ClientDashboard() {
                 ) : (
                   <button
                     onClick={() => handleStripeCheckout("standard")}
-                    disabled={checkoutLoading === "standard"}
-                    className="w-full bg-[#0A2942] text-white font-bold py-3 rounded-2xl hover:bg-slate-800 transition disabled:opacity-50"
+                    className="w-full bg-[#0A2942] text-white font-bold py-3 rounded-2xl hover:bg-slate-800 transition"
                   >
-                    {checkoutLoading === "standard" ? "Redirection..." : "Souscrire — 199€/mois"}
+                    Souscrire — 199€/mois
                   </button>
                 )}
               </div>
@@ -468,10 +442,9 @@ export default function ClientDashboard() {
                 ) : (
                   <button
                     onClick={() => handleStripeCheckout("premium")}
-                    disabled={checkoutLoading === "premium"}
-                    className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50"
+                    className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition"
                   >
-                    {checkoutLoading === "premium" ? "Redirection..." : "Souscrire — 490€/mois"}
+                    Souscrire — 490€/mois
                   </button>
                 )}
               </div>
