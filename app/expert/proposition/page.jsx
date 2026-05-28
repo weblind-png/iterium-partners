@@ -1,19 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Upload, FileText, Clock, Euro, Send } from "lucide-react";
+import { Clock, Euro, Send } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 export default function PropositionExpertPage({ params }) {
   const router = useRouter();
-  const [expert, setExpert] = useState<any>(null);
-  const [demande, setDemande] = useState<any>(null);
+  const [expert, setExpert] = useState(null);
+  const [demande, setDemande] = useState(null);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     domaine: "",
@@ -98,7 +98,7 @@ export default function PropositionExpertPage({ params }) {
 
       setStatus({ loading: false, success: true, error: null });
 
-    } catch (err: any) {
+    } catch (err) {
       setStatus({ loading: false, success: false, error: err.message });
     }
   };
@@ -198,8 +198,8 @@ export default function PropositionExpertPage({ params }) {
 
             <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-[#F8B400]" /> Durée (jours) *
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  <Clock className="h-4 w-4 text-[#F8B400] inline mr-1" /> Durée (jours) *
                 </label>
                 <input
                   type="number"
@@ -214,8 +214,8 @@ export default function PropositionExpertPage({ params }) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-2">
-                  <Euro className="h-4 w-4 text-[#F8B400]" /> TJM (€/jour) *
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  <Euro className="h-4 w-4 text-[#F8B400] inline mr-1" /> TJM (€/jour) *
                 </label>
                 <input
                   type="number"
