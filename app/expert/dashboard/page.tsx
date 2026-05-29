@@ -39,7 +39,6 @@ export default function ExpertDashboard() {
         return;
       }
 
-      // Charger profil expert
       const { data: expertData } = await supabase
         .from("experts")
         .select("*")
@@ -48,7 +47,6 @@ export default function ExpertDashboard() {
 
       setExpert(expertData);
 
-      // Charger les demandes reçues
       if (expertData) {
         const { data: demandesData } = await supabase
           .from("demandes")
@@ -131,9 +129,6 @@ export default function ExpertDashboard() {
       <div className="min-h-screen bg-[#0A2942] flex items-center justify-center px-4">
         <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center">
           <h2 className="text-xl font-bold text-[#0A2942] mb-4">Profil introuvable</h2>
-          <p className="text-slate-500 text-sm mb-6">
-            Votre profil expert n'a pas encore été créé.
-          </p>
           <a href="/expert" className="bg-[#F8B400] text-[#0A2942] font-bold py-3 px-6 rounded-2xl hover:bg-yellow-400 transition">
             Créer mon profil expert
           </a>
@@ -143,7 +138,8 @@ export default function ExpertDashboard() {
   }
 
   const demandesEnAttente = demandes.filter((d) => d.statut === "en_attente");
-  const demandesTraitees = demandes.filter((d) => d.statut !== "en_attente");
+  const demandesAcceptees = demandes.filter((d) => d.statut === "acceptee" || d.statut === "proposition_envoyee");
+  const demandesTraitees = demandes.filter((d) => d.statut === "refusee");
 
   return (
     <div className="min-h-screen bg-[#f9fafb]">
@@ -160,9 +156,7 @@ export default function ExpertDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-              expert.visible
-                ? "bg-emerald-100 text-emerald-800"
-                : "bg-yellow-100 text-yellow-800"
+              expert.visible ? "bg-emerald-100 text-emerald-800" : "bg-yellow-100 text-yellow-800"
             }`}>
               {expert.visible ? "✔ Profil validé" : "⏳ En attente validation"}
             </span>
@@ -178,7 +172,7 @@ export default function ExpertDashboard() {
         </div>
       </header>
 
-      {/* NAVIGATION ONGLETS */}
+      {/* NAVIGATION */}
       <div className="bg-white border-b">
         <div className="max-w-5xl mx-auto px-6 flex gap-6">
           {["profil", "demandes", "documents"].map((tab) => (
@@ -186,9 +180,7 @@ export default function ExpertDashboard() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`py-4 text-sm font-semibold border-b-2 transition relative ${
-                activeTab === tab
-                  ? "border-[#F8B400] text-[#0A2942]"
-                  : "border-transparent text-slate-500 hover:text-[#0A2942]"
+                activeTab === tab ? "border-[#F8B400] text-[#0A2942]" : "border-transparent text-slate-500 hover:text-[#0A2942]"
               }`}
             >
               {tab === "profil" && "👤 Mon Profil"}
@@ -327,22 +319,16 @@ export default function ExpertDashboard() {
                         ⏳ En attente
                       </span>
                     </div>
-
                     <div className="bg-slate-50 rounded-xl p-4 mb-4">
                       <p className="text-sm text-slate-700 leading-relaxed">{demande.message}</p>
                     </div>
-
                     <div className="flex gap-3">
-                      <button
-                        onClick={() => handleDemande(demande.id, "acceptee")}
-                        className="flex-1 bg-emerald-500 text-white font-bold py-2 rounded-xl hover:bg-emerald-600 transition text-sm"
-                      >
+                      <button onClick={() => handleDemande(demande.id, "acceptee")}
+                        className="flex-1 bg-emerald-500 text-white font-bold py-2 rounded-xl hover:bg-emerald-600 transition text-sm">
                         ✅ Accepter
                       </button>
-                      <button
-                        onClick={() => handleDemande(demande.id, "refusee")}
-                        className="flex-1 bg-red-100 text-red-700 font-bold py-2 rounded-xl hover:bg-red-200 transition text-sm"
-                      >
+                      <button onClick={() => handleDemande(demande.id, "refusee")}
+                        className="flex-1 bg-red-100 text-red-700 font-bold py-2 rounded-xl hover:bg-red-200 transition text-sm">
                         ❌ Refuser
                       </button>
                     </div>
@@ -351,16 +337,14 @@ export default function ExpertDashboard() {
               </div>
             )}
 
-            {/* Demandes traitées */}
-            {demandesTraitees.length > 0 && (
+            {/* Demandes acceptées — avec bouton proposition */}
+            {demandesAcceptees.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
-                  Traitées ({demandesTraitees.length})
+                  Acceptées ({demandesAcceptees.length})
                 </h3>
-                {demandesTraitees.map((demande) => (
-                  <div key={demande.id} className={`bg-white rounded-2xl shadow p-6 border-l-4 ${
-                    demande.statut === "acceptee" ? "border-emerald-400" : "border-red-300"
-                  }`}>
+                {demandesAcceptees.map((demande) => (
+                  <div key={demande.id} className="bg-white rounded-2xl shadow p-6 border-l-4 border-emerald-400">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <p className="font-bold text-[#0A2942]">
@@ -369,16 +353,61 @@ export default function ExpertDashboard() {
                         {demande.profiles?.societe && (
                           <p className="text-xs text-slate-500">{demande.profiles.societe}</p>
                         )}
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-slate-400">
                           {new Date(demande.created_at).toLocaleDateString("fr-FR")}
                         </p>
                       </div>
                       <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                        demande.statut === "acceptee"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-red-100 text-red-700"
+                        demande.statut === "proposition_envoyee"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-emerald-100 text-emerald-700"
                       }`}>
-                        {demande.statut === "acceptee" ? "✅ Acceptée" : "❌ Refusée"}
+                        {demande.statut === "proposition_envoyee" ? "📤 Proposition envoyée" : "✅ Acceptée"}
+                      </span>
+                    </div>
+                    <div className="bg-slate-50 rounded-xl p-3 mb-4">
+                      <p className="text-sm text-slate-600 line-clamp-2">{demande.message}</p>
+                    </div>
+
+                    {/* Bouton proposition uniquement si pas encore envoyée */}
+                    {demande.statut === "acceptee" && (
+                      <button
+                        onClick={() => router.push(`/expert/proposition?id=${demande.id}`)}
+                        className="w-full bg-[#0A2942] text-white font-bold py-2 rounded-xl hover:bg-slate-800 transition text-sm"
+                      >
+                        📋 Envoyer ma proposition au client
+                      </button>
+                    )}
+
+                    {demande.statut === "proposition_envoyee" && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-700">
+                        ✅ Proposition envoyée — En attente de validation par le client
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Demandes refusées */}
+            {demandesTraitees.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+                  Refusées ({demandesTraitees.length})
+                </h3>
+                {demandesTraitees.map((demande) => (
+                  <div key={demande.id} className="bg-white rounded-2xl shadow p-6 border-l-4 border-red-300">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="font-bold text-[#0A2942]">
+                          {demande.profiles?.prenom} {demande.profiles?.nom}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {new Date(demande.created_at).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                      <span className="text-xs bg-red-100 text-red-700 font-bold px-2 py-1 rounded-full">
+                        ❌ Refusée
                       </span>
                     </div>
                     <p className="text-sm text-slate-500 line-clamp-2">{demande.message}</p>
