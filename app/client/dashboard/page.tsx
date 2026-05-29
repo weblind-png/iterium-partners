@@ -14,12 +14,14 @@ export default function ClientDashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [filteredExperts, setFilteredExperts] = useState<any[]>([]);
   const [demandes, setDemandes] = useState<any[]>([]);
+  const [propositions, setPropositions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [activeTab, setActiveTab] = useState("recherche");
   const [abonnement, setAbonnement] = useState<"aucun" | "standard" | "premium">("aucun");
+  const [generatingContrat, setGeneratingContrat] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,6 +55,7 @@ export default function ClientDashboard() {
         setActiveTab("recherche");
       }
 
+      // Charger les demandes
       const { data: demandesData } = await supabase
         .from("demandes")
         .select("*, experts(prenom, nom, metier, photo_url)")
@@ -60,13 +63,21 @@ export default function ClientDashboard() {
         .order("created_at", { ascending: false });
 
       setDemandes(demandesData || []);
+
+      // Charger les propositions reçues
+      const { data: propositionsData } = await supabase
+        .from("propositions")
+        .select("*, experts(prenom, nom, metier)")
+        .eq("client_id", user.id)
+        .order("created_at", { ascending: false });
+
+      setPropositions(propositionsData || []);
       setLoading(false);
     };
 
     fetchData();
   }, []);
 
-  // ✅ SOLUTION SIMPLE : liens directs Stripe
   const handleStripeCheckout = (forfait: "standard" | "premium") => {
     if (forfait === "standard") {
       window.location.href = "https://buy.stripe.com/aFaeV5eKA1yiaAS4jHbsc06";
@@ -119,6 +130,50 @@ export default function ClientDashboard() {
     router.push(`/client/contact?expert=${expert.id}`);
   };
 
+  const handleValiderProposition = async (propositionId: string, demandeId: string) => {
+    await supabase
+      .from("propositions")
+      .update({ statut: "validee" })
+      .eq("id", propositionId);
+
+    await supabase
+      .from("demandes")
+      .update({ statut: "validee" })
+      .eq("id", demandeId);
+
+    setPropositions(propositions.map((p) =>
+      p.id === propositionId ? { ...p, statut: "validee" } : p
+    ));
+  };
+
+  const handleGenererContrats = async (demandeId: string) => {
+    setGeneratingContrat(demandeId);
+
+    try {
+      // Générer NDA
+      await fetch("/api/contrats/generer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ demandeId, type: "nda" }),
+      });
+
+      // Générer contrat de mise en relation
+      await fetch("/api/contrats/generer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ demandeId, type: "mise_en_relation" }),
+      });
+
+      alert("✅ NDA et contrat de mise en relation générés ! Vous les retrouverez dans l'onglet 'Mes contrats'.");
+      setActiveTab("contrats");
+
+    } catch (error) {
+      alert("Erreur lors de la génération des contrats.");
+    }
+
+    setGeneratingContrat(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A2942] flex items-center justify-center">
@@ -128,6 +183,7 @@ export default function ClientDashboard() {
   }
 
   const demandesEnAttente = demandes.filter((d) => d.statut === "en_attente");
+  const propositionsEnAttente = propositions.filter((p) => p.statut === "en_attente");
 
   return (
     <div className="min-h-screen bg-[#f9fafb]">
@@ -174,9 +230,9 @@ export default function ClientDashboard() {
               {tab === "demandes" && (
                 <span className="flex items-center gap-2">
                   📬 Mes demandes
-                  {demandesEnAttente.length > 0 && (
+                  {(demandesEnAttente.length + propositionsEnAttente.length) > 0 && (
                     <span className="bg-yellow-400 text-[#0A2942] text-xs font-bold px-1.5 py-0.5 rounded-full">
-                      {demandesEnAttente.length}
+                      {demandesEnAttente.length + propositionsEnAttente.length}
                     </span>
                   )}
                 </span>
@@ -241,9 +297,7 @@ export default function ClientDashboard() {
                 {abonnement === "aucun" && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center">
                     <p className="text-yellow-800 font-semibold mb-2">⚠️ Abonnement requis</p>
-                    <p className="text-yellow-700 text-sm mb-4">
-                      Souscrivez à un abonnement pour contacter les experts.
-                    </p>
+                    <p className="text-yellow-700 text-sm mb-4">Souscrivez pour contacter les experts.</p>
                     <button onClick={() => setActiveTab("abonnement")}
                       className="bg-[#F8B400] text-[#0A2942] font-bold px-6 py-2 rounded-xl hover:bg-yellow-400 transition text-sm">
                       Voir les formules
@@ -306,22 +360,99 @@ export default function ClientDashboard() {
 
         {/* ONGLET DEMANDES */}
         {activeTab === "demandes" && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold text-[#0A2942]">Mes demandes de contact</h2>
-            {demandes.length === 0 ? (
-              <div className="bg-white rounded-3xl shadow p-12 text-center text-slate-400">
-                <p className="text-4xl mb-4">📬</p>
-                <p className="font-semibold">Aucune demande envoyée</p>
-                <button onClick={() => setActiveTab("recherche")}
-                  className="mt-4 bg-[#F8B400] text-[#0A2942] font-bold px-6 py-2 rounded-xl hover:bg-yellow-400 transition text-sm">
-                  Rechercher un expert
-                </button>
-              </div>
-            ) : (
+          <div className="space-y-8">
+            <h2 className="text-xl font-bold text-[#0A2942]">Mes demandes et propositions</h2>
+
+            {/* Propositions reçues */}
+            {propositions.length > 0 && (
               <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+                  📋 Propositions reçues ({propositions.length})
+                </h3>
+                {propositions.map((proposition) => (
+                  <div key={proposition.id} className={`bg-white rounded-2xl shadow p-6 border-l-4 ${
+                    proposition.statut === "validee" ? "border-emerald-400" : "border-blue-400"
+                  }`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="font-bold text-[#0A2942]">
+                          {proposition.experts?.prenom} {proposition.experts?.nom?.charAt(0)}.
+                        </p>
+                        <p className="text-xs text-slate-500">{proposition.experts?.metier}</p>
+                        <p className="text-xs text-slate-400">
+                          {new Date(proposition.created_at).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                        proposition.statut === "validee"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-blue-100 text-blue-700"
+                      }`}>
+                        {proposition.statut === "validee" ? "✅ Validée" : "📋 À valider"}
+                      </span>
+                    </div>
+
+                    {/* Détails proposition */}
+                    <div className="bg-slate-50 rounded-xl p-4 mb-4 grid grid-cols-3 gap-3 text-center">
+                      <div>
+                        <p className="text-xs text-slate-400">Durée</p>
+                        <p className="font-bold text-[#0A2942]">{proposition.duree} jour(s)</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400">TJM</p>
+                        <p className="font-bold text-[#0A2942]">{proposition.tjm} €/j</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400">Total estimé</p>
+                        <p className="font-bold text-[#F8B400]">
+                          {(proposition.duree * proposition.tjm).toLocaleString("fr-FR")} €
+                        </p>
+                      </div>
+                    </div>
+
+                    {proposition.description && (
+                      <div className="bg-slate-50 rounded-xl p-3 mb-4">
+                        <p className="text-xs font-semibold text-slate-500 mb-1">Approche proposée :</p>
+                        <p className="text-sm text-slate-700">{proposition.description}</p>
+                      </div>
+                    )}
+
+                    {proposition.statut === "en_attente" && (
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => handleValiderProposition(proposition.id, proposition.demande_id)}
+                          className="flex-1 bg-emerald-500 text-white font-bold py-2 rounded-xl hover:bg-emerald-600 transition text-sm"
+                        >
+                          ✅ Valider la proposition
+                        </button>
+                      </div>
+                    )}
+
+                    {proposition.statut === "validee" && (
+                      <button
+                        onClick={() => handleGenererContrats(proposition.demande_id)}
+                        disabled={generatingContrat === proposition.demande_id}
+                        className="w-full bg-[#0A2942] text-white font-bold py-2 rounded-xl hover:bg-slate-800 transition text-sm disabled:opacity-50"
+                      >
+                        {generatingContrat === proposition.demande_id
+                          ? "⏳ Génération en cours..."
+                          : "📄 Générer NDA + Contrat de mise en relation"}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Demandes envoyées */}
+            {demandes.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+                  📬 Demandes envoyées ({demandes.length})
+                </h3>
                 {demandes.map((demande) => (
                   <div key={demande.id} className={`bg-white rounded-2xl shadow p-6 border-l-4 ${
-                    demande.statut === "acceptee" ? "border-emerald-400" :
+                    demande.statut === "acceptee" || demande.statut === "validee" ? "border-emerald-400" :
                     demande.statut === "refusee" ? "border-red-300" : "border-yellow-400"
                   }`}>
                     <div className="flex items-start justify-between mb-3">
@@ -342,25 +473,34 @@ export default function ClientDashboard() {
                         </div>
                       </div>
                       <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                        demande.statut === "acceptee" ? "bg-emerald-100 text-emerald-700" :
+                        demande.statut === "acceptee" || demande.statut === "proposition_envoyee" || demande.statut === "validee"
+                          ? "bg-emerald-100 text-emerald-700" :
                         demande.statut === "refusee" ? "bg-red-100 text-red-700" :
                         "bg-yellow-100 text-yellow-700"
                       }`}>
-                        {demande.statut === "acceptee" && "✅ Acceptée"}
-                        {demande.statut === "refusee" && "❌ Refusée"}
                         {demande.statut === "en_attente" && "⏳ En attente"}
+                        {demande.statut === "acceptee" && "✅ Acceptée"}
+                        {demande.statut === "proposition_envoyee" && "📋 Proposition reçue"}
+                        {demande.statut === "validee" && "✅ Validée"}
+                        {demande.statut === "refusee" && "❌ Refusée"}
                       </span>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-3">
                       <p className="text-sm text-slate-600 line-clamp-2">{demande.message}</p>
                     </div>
-                    {demande.statut === "acceptee" && (
-                      <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-700">
-                        🎉 L'expert a accepté votre demande ! La prochaine étape est la génération du contrat de mise en relation.
-                      </div>
-                    )}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {demandes.length === 0 && propositions.length === 0 && (
+              <div className="bg-white rounded-3xl shadow p-12 text-center text-slate-400">
+                <p className="text-4xl mb-4">📬</p>
+                <p className="font-semibold">Aucune demande envoyée</p>
+                <button onClick={() => setActiveTab("recherche")}
+                  className="mt-4 bg-[#F8B400] text-[#0A2942] font-bold px-6 py-2 rounded-xl hover:bg-yellow-400 transition text-sm">
+                  Rechercher un expert
+                </button>
               </div>
             )}
           </div>
@@ -368,14 +508,7 @@ export default function ClientDashboard() {
 
         {/* ONGLET CONTRATS */}
         {activeTab === "contrats" && (
-          <div className="bg-white rounded-3xl shadow p-8">
-            <h2 className="text-xl font-bold text-[#0A2942] mb-6">Mes contrats</h2>
-            <div className="text-center py-12 text-slate-400">
-              <p className="text-4xl mb-4">📄</p>
-              <p className="font-semibold">Aucun contrat pour le moment</p>
-              <p className="text-sm mt-1">Vos contrats générés apparaîtront ici</p>
-            </div>
-          </div>
+          <ContratsList clientId={profile?.id} />
         )}
 
         {/* ONGLET ABONNEMENT */}
@@ -390,7 +523,6 @@ export default function ClientDashboard() {
             )}
 
             <div className="grid md:grid-cols-2 gap-6">
-
               <div className={`bg-white rounded-3xl shadow p-8 border-2 ${abonnement === "standard" ? "border-[#0A2942]" : "border-transparent"}`}>
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-[#0A2942]">Forfait Essentiel</h3>
@@ -410,10 +542,8 @@ export default function ClientDashboard() {
                 {abonnement === "standard" ? (
                   <div className="text-center text-sm font-bold text-emerald-600">✔ Votre abonnement actuel</div>
                 ) : (
-                  <button
-                    onClick={() => handleStripeCheckout("standard")}
-                    className="w-full bg-[#0A2942] text-white font-bold py-3 rounded-2xl hover:bg-slate-800 transition"
-                  >
+                  <button onClick={() => handleStripeCheckout("standard")}
+                    className="w-full bg-[#0A2942] text-white font-bold py-3 rounded-2xl hover:bg-slate-800 transition">
                     Souscrire — 199€/mois
                   </button>
                 )}
@@ -440,20 +570,91 @@ export default function ClientDashboard() {
                 {abonnement === "premium" ? (
                   <div className="text-center text-sm font-bold text-[#F8B400]">✔ Votre abonnement actuel</div>
                 ) : (
-                  <button
-                    onClick={() => handleStripeCheckout("premium")}
-                    className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition"
-                  >
+                  <button onClick={() => handleStripeCheckout("premium")}
+                    className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition">
                     Souscrire — 490€/mois
                   </button>
                 )}
               </div>
-
             </div>
           </div>
         )}
 
       </div>
+    </div>
+  );
+}
+
+// Composant liste des contrats
+function ContratsList({ clientId }: { clientId: string }) {
+  const [contrats, setContrats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("contrats")
+        .select("*, experts(prenom, nom, metier)")
+        .eq("client_id", clientId)
+        .order("created_at", { ascending: false });
+
+      setContrats(data || []);
+      setLoading(false);
+    };
+
+    if (clientId) fetch();
+  }, [clientId]);
+
+  if (loading) return <div className="text-center py-12 text-slate-400">Chargement...</div>;
+
+  if (contrats.length === 0) {
+    return (
+      <div className="bg-white rounded-3xl shadow p-12 text-center text-slate-400">
+        <p className="text-4xl mb-4">📄</p>
+        <p className="font-semibold">Aucun contrat pour le moment</p>
+        <p className="text-sm mt-1">Vos contrats apparaîtront ici après validation d'une proposition</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-bold text-[#0A2942]">Mes contrats</h2>
+      {contrats.map((contrat) => (
+        <div key={contrat.id} className="bg-white rounded-2xl shadow p-6 border-l-4 border-[#0A2942]">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <p className="font-bold text-[#0A2942]">
+                {contrat.type === "nda" ? "🔒 NDA — Accord de confidentialité" : "📋 Contrat de mise en relation"}
+              </p>
+              <p className="text-xs text-slate-500">
+                avec {contrat.experts?.prenom} {contrat.experts?.nom} — {contrat.experts?.metier}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                {new Date(contrat.created_at).toLocaleDateString("fr-FR")}
+              </p>
+            </div>
+            <span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-1 rounded-full">
+              ✅ Généré
+            </span>
+          </div>
+
+          {/* Aperçu du contrat */}
+          <details className="mt-2">
+            <summary className="text-xs text-[#0A2942] font-semibold cursor-pointer hover:underline">
+              Voir le contenu
+            </summary>
+            <pre className="mt-3 bg-slate-50 rounded-xl p-4 text-xs text-slate-600 whitespace-pre-wrap font-mono overflow-auto max-h-64">
+              {contrat.contenu}
+            </pre>
+          </details>
+        </div>
+      ))}
     </div>
   );
 }
