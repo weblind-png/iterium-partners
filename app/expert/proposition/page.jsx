@@ -10,10 +10,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-export default function PropositionExpertPage({ params }) {
+export default function PropositionExpertPage() {
   const router = useRouter();
   const [expert, setExpert] = useState(null);
   const [demande, setDemande] = useState(null);
+  const [demandeId, setDemandeId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     domaine: "",
@@ -34,6 +35,17 @@ export default function PropositionExpertPage({ params }) {
         return;
       }
 
+      // ✅ Lire l'ID depuis l'URL query string
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get("id");
+
+      if (!id) {
+        router.push("/expert/dashboard");
+        return;
+      }
+
+      setDemandeId(id);
+
       // Récupérer l'expert connecté
       const { data: expertData } = await supabase
         .from("experts")
@@ -43,11 +55,11 @@ export default function PropositionExpertPage({ params }) {
 
       setExpert(expertData);
 
-      // Récupérer la demande
+      // Récupérer la demande avec les infos client
       const { data: demandeData } = await supabase
         .from("demandes")
         .select("*, profiles(prenom, nom, email, societe)")
-        .eq("id", params.id)
+        .eq("id", id)
         .single();
 
       setDemande(demandeData);
@@ -76,7 +88,7 @@ export default function PropositionExpertPage({ params }) {
       const { error } = await supabase
         .from("propositions")
         .insert([{
-          demande_id: params.id,
+          demande_id: demandeId,
           expert_id: expert?.id,
           client_id: demande?.client_id,
           domaine: formData.domaine,
@@ -94,7 +106,7 @@ export default function PropositionExpertPage({ params }) {
       await supabase
         .from("demandes")
         .update({ statut: "proposition_envoyee" })
-        .eq("id", params.id);
+        .eq("id", demandeId);
 
       setStatus({ loading: false, success: true, error: null });
 
@@ -135,7 +147,7 @@ export default function PropositionExpertPage({ params }) {
         )}
 
         <h2 className="text-2xl font-semibold text-[#0A2942] mb-6">
-          Votre proposition — Mission #{params.id?.slice(0, 8)}
+          Votre proposition — Mission #{demandeId?.slice(0, 8)}
         </h2>
 
         {status.success ? (
