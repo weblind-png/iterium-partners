@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: NextRequest) {
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
     const { demandeId, type } = await request.json();
 
     if (!demandeId || !type) {
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (demandeError || !demande) {
+      console.error("Demande error:", demandeError);
       return NextResponse.json({ error: "Demande introuvable" }, { status: 404 });
     }
 
@@ -42,15 +43,15 @@ ACCORD DE CONFIDENTIALITÉ (NDA)
 Date : ${date}
 
 ENTRE :
-- ${demande.profiles?.prenom} ${demande.profiles?.nom}
+- ${demande.profiles?.prenom || "Client"} ${demande.profiles?.nom || ""}
   ${demande.profiles?.societe ? `Société : ${demande.profiles.societe}` : ""}
-  Email : ${demande.profiles?.email}
+  Email : ${demande.profiles?.email || ""}
   Ci-après dénommé "LE CLIENT"
 
 ET :
-- ${demande.experts?.prenom} ${demande.experts?.nom}
-  Fonction : ${demande.experts?.metier}
-  Email : ${demande.experts?.email}
+- ${demande.experts?.prenom || "Expert"} ${demande.experts?.nom || ""}
+  Fonction : ${demande.experts?.metier || ""}
+  Email : ${demande.experts?.email || ""}
   Ci-après dénommé "L'EXPERT"
 
 OBJET :
@@ -73,10 +74,10 @@ DROIT APPLICABLE :
 Le présent accord est soumis au droit français. Tout litige relève de la 
 compétence des tribunaux de Beauvais.
 
-Fait à Paris, le ${date}
+Fait le ${date}
 
-LE CLIENT : ${demande.profiles?.prenom} ${demande.profiles?.nom}
-L'EXPERT : ${demande.experts?.prenom} ${demande.experts?.nom}
+LE CLIENT : ${demande.profiles?.prenom || "Client"} ${demande.profiles?.nom || ""}
+L'EXPERT : ${demande.experts?.prenom || "Expert"} ${demande.experts?.nom || ""}
 
 --- Document généré automatiquement par ITERIUM PARTNERS ---
       `.trim();
@@ -98,19 +99,19 @@ SIRET : 522 800 226 00030
 Email : contact@itriumconseil.com
 
 LE CLIENT :
-- ${demande.profiles?.prenom} ${demande.profiles?.nom}
+- ${demande.profiles?.prenom || "Client"} ${demande.profiles?.nom || ""}
   ${demande.profiles?.societe ? `Société : ${demande.profiles.societe}` : ""}
-  Email : ${demande.profiles?.email}
+  Email : ${demande.profiles?.email || ""}
 
 L'EXPERT :
-- ${demande.experts?.prenom} ${demande.experts?.nom}
-  Fonction : ${demande.experts?.metier}
-  Localisation : ${demande.experts?.localisation}
-  TJM : ${demande.experts?.tjm} €/jour
-  Email : ${demande.experts?.email}
+- ${demande.experts?.prenom || "Expert"} ${demande.experts?.nom || ""}
+  Fonction : ${demande.experts?.metier || ""}
+  Localisation : ${demande.experts?.localisation || ""}
+  TJM : ${demande.experts?.tjm || ""} €/jour
+  Email : ${demande.experts?.email || ""}
 
 OBJET DE LA MISSION :
-${demande.message}
+${demande.message || ""}
 
 CONDITIONS GÉNÉRALES :
 
@@ -144,10 +145,10 @@ CONDITIONS GÉNÉRALES :
    Le présent contrat est soumis au droit français. Tout litige relève de la 
    compétence exclusive des tribunaux de Beauvais (Oise).
 
-Fait à Paris, le ${date}
+Fait le ${date}
 
-LE CLIENT : ${demande.profiles?.prenom} ${demande.profiles?.nom}
-L'EXPERT : ${demande.experts?.prenom} ${demande.experts?.nom}
+LE CLIENT : ${demande.profiles?.prenom || "Client"} ${demande.profiles?.nom || ""}
+L'EXPERT : ${demande.experts?.prenom || "Expert"} ${demande.experts?.nom || ""}
 ITERIUM PARTNERS : Eric BLIND
 
 --- Document généré automatiquement par ITERIUM PARTNERS ---
@@ -170,7 +171,8 @@ ITERIUM PARTNERS : Eric BLIND
       .single();
 
     if (contratError) {
-      return NextResponse.json({ error: "Erreur lors de la sauvegarde" }, { status: 500 });
+      console.error("Contrat error:", contratError);
+      return NextResponse.json({ error: contratError.message }, { status: 500 });
     }
 
     return NextResponse.json({ contrat });
