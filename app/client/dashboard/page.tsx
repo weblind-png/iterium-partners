@@ -585,7 +585,7 @@ export default function ClientDashboard() {
   );
 }
 
-// Composant liste des contrats
+// Composant liste des contrats avec badge certification
 function ContratsList({ clientId }: { clientId: string }) {
   const [contrats, setContrats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -596,7 +596,7 @@ function ContratsList({ clientId }: { clientId: string }) {
   );
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchContrats = async () => {
       const { data } = await supabase
         .from("contrats")
         .select("*, experts(prenom, nom, metier)")
@@ -607,7 +607,7 @@ function ContratsList({ clientId }: { clientId: string }) {
       setLoading(false);
     };
 
-    if (clientId) fetch();
+    if (clientId) fetchContrats();
   }, [clientId]);
 
   if (loading) return <div className="text-center py-12 text-slate-400">Chargement...</div>;
@@ -636,7 +636,9 @@ function ContratsList({ clientId }: { clientId: string }) {
                 avec {contrat.experts?.prenom} {contrat.experts?.nom} — {contrat.experts?.metier}
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                {new Date(contrat.created_at).toLocaleDateString("fr-FR")}
+                {new Date(contrat.created_at).toLocaleDateString("fr-FR", {
+                  day: "numeric", month: "long", year: "numeric"
+                })}
               </p>
             </div>
             <span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-1 rounded-full">
@@ -653,6 +655,19 @@ function ContratsList({ clientId }: { clientId: string }) {
               {contrat.contenu}
             </pre>
           </details>
+
+          {/* Badge certification */}
+          <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+            <p className="text-xs text-slate-400 italic">
+              Document généré et certifié par ITERIUM PARTNERS
+            </p>
+            <img
+              src="/certif/certified_stamp.png"
+              alt="Certified by ITERIUM Digital Trust"
+              className="h-16 opacity-90"
+            />
+          </div>
+
         </div>
       ))}
     </div>
