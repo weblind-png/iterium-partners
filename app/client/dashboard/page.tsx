@@ -131,6 +131,8 @@ export default function ClientDashboard() {
   };
 
   const handleValiderProposition = async (propositionId: string, demandeId: string) => {
+    const proposition = propositions.find((p) => p.id === propositionId);
+
     await supabase
       .from("propositions")
       .update({ statut: "validee" })
@@ -144,6 +146,27 @@ export default function ClientDashboard() {
     setPropositions(propositions.map((p) =>
       p.id === propositionId ? { ...p, statut: "validee" } : p
     ));
+
+    // ✅ Notifier l'expert
+    if (proposition?.experts?.email) {
+      await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "proposition_validee",
+          to: proposition.experts.email,
+          data: {
+            expertPrenom: proposition.experts?.prenom,
+            clientPrenom: profile?.prenom,
+            clientNom: profile?.nom,
+            clientSociete: profile?.societe,
+            domaine: proposition.domaine,
+            duree: proposition.duree,
+            montantTotal: (proposition.duree * proposition.tjm).toLocaleString("fr-FR"),
+          },
+        }),
+      });
+    }
   };
 
   const handleGenererContrats = async (demandeId: string) => {
