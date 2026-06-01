@@ -26,22 +26,12 @@ export default function ClientDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/auth/login");
-        return;
-      }
+      if (!user) { router.push("/auth/login"); return; }
 
       const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+        .from("profiles").select("*").eq("id", user.id).single();
 
-      if (profileData?.role !== "client") {
-        router.push("/auth/login");
-        return;
-      }
+      if (profileData?.role !== "client") { router.push("/auth/login"); return; }
 
       setProfile(profileData);
 
@@ -55,23 +45,21 @@ export default function ClientDashboard() {
         setActiveTab("recherche");
       }
 
-      // Charger les demandes
       const { data: demandesData } = await supabase
         .from("demandes")
         .select("*, experts(prenom, nom, metier, photo_url)")
         .eq("client_id", user.id)
         .order("created_at", { ascending: false });
-
       setDemandes(demandesData || []);
 
-      // Charger les propositions reçues
+      // ✅ Ajout de email dans le select experts
       const { data: propositionsData } = await supabase
         .from("propositions")
-        .select("*, experts(prenom, nom, metier)")
+        .select("*, experts(prenom, nom, metier, email)")
         .eq("client_id", user.id)
         .order("created_at", { ascending: false });
-
       setPropositions(propositionsData || []);
+
       setLoading(false);
     };
 
@@ -92,9 +80,7 @@ export default function ClientDashboard() {
     setHasSearched(true);
 
     const { data: experts } = await supabase
-      .from("experts")
-      .select("*")
-      .eq("visible", true);
+      .from("experts").select("*").eq("visible", true);
 
     const query = searchQuery.toLowerCase();
     const results = (experts || []).filter((expert) =>
@@ -123,31 +109,21 @@ export default function ClientDashboard() {
   };
 
   const handleContact = (expert: any) => {
-    if (abonnement === "aucun") {
-      setActiveTab("abonnement");
-      return;
-    }
+    if (abonnement === "aucun") { setActiveTab("abonnement"); return; }
     router.push(`/client/contact?expert=${expert.id}`);
   };
 
   const handleValiderProposition = async (propositionId: string, demandeId: string) => {
     const proposition = propositions.find((p) => p.id === propositionId);
 
-    await supabase
-      .from("propositions")
-      .update({ statut: "validee" })
-      .eq("id", propositionId);
-
-    await supabase
-      .from("demandes")
-      .update({ statut: "validee" })
-      .eq("id", demandeId);
+    await supabase.from("propositions").update({ statut: "validee" }).eq("id", propositionId);
+    await supabase.from("demandes").update({ statut: "validee" }).eq("id", demandeId);
 
     setPropositions(propositions.map((p) =>
       p.id === propositionId ? { ...p, statut: "validee" } : p
     ));
 
-    // ✅ Notifier l'expert
+    // ✅ Notifier l'expert par email
     if (proposition?.experts?.email) {
       await fetch("/api/notifications", {
         method: "POST",
@@ -171,29 +147,22 @@ export default function ClientDashboard() {
 
   const handleGenererContrats = async (demandeId: string) => {
     setGeneratingContrat(demandeId);
-
     try {
-      // Générer NDA
       await fetch("/api/contrats/generer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ demandeId, type: "nda" }),
       });
-
-      // Générer contrat de mise en relation
       await fetch("/api/contrats/generer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ demandeId, type: "mise_en_relation" }),
       });
-
-      alert("✅ NDA et contrat de mise en relation générés ! Vous les retrouverez dans l'onglet 'Mes contrats'.");
+      alert("✅ NDA et contrat de mise en relation générés !");
       setActiveTab("contrats");
-
     } catch (error) {
       alert("Erreur lors de la génération des contrats.");
     }
-
     setGeneratingContrat(null);
   };
 
@@ -242,13 +211,10 @@ export default function ClientDashboard() {
       <div className="bg-white border-b">
         <div className="max-w-6xl mx-auto px-6 flex gap-6 overflow-x-auto">
           {["recherche", "demandes", "contrats", "abonnement"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+            <button key={tab} onClick={() => setActiveTab(tab)}
               className={`py-4 text-sm font-semibold border-b-2 transition whitespace-nowrap ${
                 activeTab === tab ? "border-[#F8B400] text-[#0A2942]" : "border-transparent text-slate-500 hover:text-[#0A2942]"
-              }`}
-            >
+              }`}>
               {tab === "recherche" && "🔍 Rechercher un expert"}
               {tab === "demandes" && (
                 <span className="flex items-center gap-2">
@@ -275,23 +241,16 @@ export default function ClientDashboard() {
           <div className="space-y-6">
             <div className="bg-white rounded-3xl shadow p-6">
               <h2 className="text-xl font-bold text-[#0A2942] mb-1">🤖 Recherche IA d'experts</h2>
-              <p className="text-slate-500 text-sm mb-4">
-                Décrivez votre besoin en quelques mots et notre IA sélectionne les meilleurs profils.
-              </p>
+              <p className="text-slate-500 text-sm mb-4">Décrivez votre besoin et notre IA sélectionne les meilleurs profils.</p>
               <div className="flex gap-3">
-                <input
-                  type="text"
+                <input type="text"
                   placeholder="Ex: RSSI NIS2 urgence, DSI de transition, DAF clôture groupe..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="flex-1 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400"
-                />
-                <button
-                  onClick={handleSearch}
-                  disabled={searching || !searchQuery.trim()}
-                  className="bg-[#F8B400] text-[#0A2942] font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 transition disabled:opacity-50"
-                >
+                  className="flex-1 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400" />
+                <button onClick={handleSearch} disabled={searching || !searchQuery.trim()}
+                  className="bg-[#F8B400] text-[#0A2942] font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 transition disabled:opacity-50">
                   {searching ? "..." : "Rechercher"}
                 </button>
               </div>
@@ -307,9 +266,7 @@ export default function ClientDashboard() {
                 <div className="flex flex-wrap gap-2 justify-center mt-6">
                   {["RSSI NIS2", "DSI de transition", "DAF groupe", "CTO startup", "Expert SAP", "Audit cybersécurité"].map((s) => (
                     <button key={s} onClick={() => setSearchQuery(s)}
-                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full transition">
-                      {s}
-                    </button>
+                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full transition">{s}</button>
                   ))}
                 </div>
               </div>
@@ -327,7 +284,6 @@ export default function ClientDashboard() {
                     </button>
                   </div>
                 )}
-
                 {filteredExperts.length === 0 ? (
                   <div className="bg-white rounded-3xl shadow p-12 text-center text-slate-400">
                     <p className="text-4xl mb-4">🔍</p>
@@ -361,14 +317,10 @@ export default function ClientDashboard() {
                           <p className="text-xs font-semibold text-[#0A2942] mb-2">💶 {expert.tjm} €/jour</p>
                           <p className="text-xs text-slate-500 mb-4 line-clamp-2">{expert.expertises}</p>
                           {expert.score > 0 && <p className="text-xs font-bold text-[#F8B400] mb-3">🤖 Score IA : {expert.score}/6</p>}
-                          <button
-                            onClick={() => handleContact(expert)}
+                          <button onClick={() => handleContact(expert)}
                             className={`w-full py-2 rounded-xl text-sm font-bold transition ${
-                              abonnement !== "aucun"
-                                ? "bg-[#0A2942] text-white hover:bg-slate-800"
-                                : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                            }`}
-                          >
+                              abonnement !== "aucun" ? "bg-[#0A2942] text-white hover:bg-slate-800" : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                            }`}>
                             {abonnement !== "aucun" ? "Contacter cet expert" : "🔒 Abonnement requis"}
                           </button>
                         </div>
@@ -386,7 +338,6 @@ export default function ClientDashboard() {
           <div className="space-y-8">
             <h2 className="text-xl font-bold text-[#0A2942]">Mes demandes et propositions</h2>
 
-            {/* Propositions reçues */}
             {propositions.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
@@ -398,24 +349,16 @@ export default function ClientDashboard() {
                   }`}>
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <p className="font-bold text-[#0A2942]">
-                          {proposition.experts?.prenom} {proposition.experts?.nom?.charAt(0)}.
-                        </p>
+                        <p className="font-bold text-[#0A2942]">{proposition.experts?.prenom} {proposition.experts?.nom?.charAt(0)}.</p>
                         <p className="text-xs text-slate-500">{proposition.experts?.metier}</p>
-                        <p className="text-xs text-slate-400">
-                          {new Date(proposition.created_at).toLocaleDateString("fr-FR")}
-                        </p>
+                        <p className="text-xs text-slate-400">{new Date(proposition.created_at).toLocaleDateString("fr-FR")}</p>
                       </div>
                       <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                        proposition.statut === "validee"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-blue-100 text-blue-700"
+                        proposition.statut === "validee" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
                       }`}>
                         {proposition.statut === "validee" ? "✅ Validée" : "📋 À valider"}
                       </span>
                     </div>
-
-                    {/* Détails proposition */}
                     <div className="bg-slate-50 rounded-xl p-4 mb-4 grid grid-cols-3 gap-3 text-center">
                       <div>
                         <p className="text-xs text-slate-400">Durée</p>
@@ -427,39 +370,26 @@ export default function ClientDashboard() {
                       </div>
                       <div>
                         <p className="text-xs text-slate-400">Total estimé</p>
-                        <p className="font-bold text-[#F8B400]">
-                          {(proposition.duree * proposition.tjm).toLocaleString("fr-FR")} €
-                        </p>
+                        <p className="font-bold text-[#F8B400]">{(proposition.duree * proposition.tjm).toLocaleString("fr-FR")} €</p>
                       </div>
                     </div>
-
                     {proposition.description && (
                       <div className="bg-slate-50 rounded-xl p-3 mb-4">
                         <p className="text-xs font-semibold text-slate-500 mb-1">Approche proposée :</p>
                         <p className="text-sm text-slate-700">{proposition.description}</p>
                       </div>
                     )}
-
                     {proposition.statut === "en_attente" && (
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => handleValiderProposition(proposition.id, proposition.demande_id)}
-                          className="flex-1 bg-emerald-500 text-white font-bold py-2 rounded-xl hover:bg-emerald-600 transition text-sm"
-                        >
-                          ✅ Valider la proposition
-                        </button>
-                      </div>
+                      <button onClick={() => handleValiderProposition(proposition.id, proposition.demande_id)}
+                        className="w-full bg-emerald-500 text-white font-bold py-2 rounded-xl hover:bg-emerald-600 transition text-sm">
+                        ✅ Valider la proposition
+                      </button>
                     )}
-
                     {proposition.statut === "validee" && (
-                      <button
-                        onClick={() => handleGenererContrats(proposition.demande_id)}
+                      <button onClick={() => handleGenererContrats(proposition.demande_id)}
                         disabled={generatingContrat === proposition.demande_id}
-                        className="w-full bg-[#0A2942] text-white font-bold py-2 rounded-xl hover:bg-slate-800 transition text-sm disabled:opacity-50"
-                      >
-                        {generatingContrat === proposition.demande_id
-                          ? "⏳ Génération en cours..."
-                          : "📄 Générer NDA + Contrat de mise en relation"}
+                        className="w-full bg-[#0A2942] text-white font-bold py-2 rounded-xl hover:bg-slate-800 transition text-sm disabled:opacity-50">
+                        {generatingContrat === proposition.demande_id ? "⏳ Génération en cours..." : "📄 Générer NDA + Contrat de mise en relation"}
                       </button>
                     )}
                   </div>
@@ -467,7 +397,6 @@ export default function ClientDashboard() {
               </div>
             )}
 
-            {/* Demandes envoyées */}
             {demandes.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
@@ -498,8 +427,7 @@ export default function ClientDashboard() {
                       <span className={`text-xs font-bold px-2 py-1 rounded-full ${
                         demande.statut === "acceptee" || demande.statut === "proposition_envoyee" || demande.statut === "validee"
                           ? "bg-emerald-100 text-emerald-700" :
-                        demande.statut === "refusee" ? "bg-red-100 text-red-700" :
-                        "bg-yellow-100 text-yellow-700"
+                        demande.statut === "refusee" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"
                       }`}>
                         {demande.statut === "en_attente" && "⏳ En attente"}
                         {demande.statut === "acceptee" && "✅ Acceptée"}
@@ -530,29 +458,22 @@ export default function ClientDashboard() {
         )}
 
         {/* ONGLET CONTRATS */}
-        {activeTab === "contrats" && (
-          <ContratsList clientId={profile?.id} />
-        )}
+        {activeTab === "contrats" && <ContratsList clientId={profile?.id} />}
 
         {/* ONGLET ABONNEMENT */}
         {activeTab === "abonnement" && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-[#0A2942]">Mon abonnement</h2>
-
             {abonnement !== "aucun" && (
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-emerald-700 text-sm font-semibold">
                 ✅ Vous êtes abonné au forfait {abonnement === "standard" ? "Essentiel" : "Groupe"}. Merci pour votre confiance !
               </div>
             )}
-
             <div className="grid md:grid-cols-2 gap-6">
               <div className={`bg-white rounded-3xl shadow p-8 border-2 ${abonnement === "standard" ? "border-[#0A2942]" : "border-transparent"}`}>
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-[#0A2942]">Forfait Essentiel</h3>
-                  <div className="mt-2">
-                    <span className="text-3xl font-bold text-[#0A2942]">199€</span>
-                    <span className="text-sm text-slate-500"> /mois</span>
-                  </div>
+                  <div className="mt-2"><span className="text-3xl font-bold text-[#0A2942]">199€</span><span className="text-sm text-slate-500"> /mois</span></div>
                   <p className="text-xs text-slate-400 mt-1">ou 1 990€/an (2 mois offerts)</p>
                 </div>
                 <ul className="space-y-2 text-sm text-slate-600 mb-6">
@@ -571,15 +492,11 @@ export default function ClientDashboard() {
                   </button>
                 )}
               </div>
-
               <div className={`bg-[#0A2942] rounded-3xl shadow p-8 border-2 ${abonnement === "premium" ? "border-[#F8B400]" : "border-transparent"}`}>
                 <div className="text-center mb-6">
                   <span className="text-xs bg-[#F8B400] text-[#0A2942] font-bold px-3 py-1 rounded-full">⭐ PREMIUM</span>
                   <h3 className="text-xl font-bold text-white mt-3">Forfait Groupe</h3>
-                  <div className="mt-2">
-                    <span className="text-3xl font-bold text-[#F8B400]">490€</span>
-                    <span className="text-sm text-slate-400"> /mois</span>
-                  </div>
+                  <div className="mt-2"><span className="text-3xl font-bold text-[#F8B400]">490€</span><span className="text-sm text-slate-400"> /mois</span></div>
                   <p className="text-xs text-slate-400 mt-1">ou 4 900€/an (2 mois offerts)</p>
                 </div>
                 <ul className="space-y-2 text-sm text-slate-300 mb-6">
@@ -625,11 +542,9 @@ function ContratsList({ clientId }: { clientId: string }) {
         .select("*, experts(prenom, nom, metier)")
         .eq("client_id", clientId)
         .order("created_at", { ascending: false });
-
       setContrats(data || []);
       setLoading(false);
     };
-
     if (clientId) fetchContrats();
   }, [clientId]);
 
@@ -659,38 +574,21 @@ function ContratsList({ clientId }: { clientId: string }) {
                 avec {contrat.experts?.prenom} {contrat.experts?.nom} — {contrat.experts?.metier}
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                {new Date(contrat.created_at).toLocaleDateString("fr-FR", {
-                  day: "numeric", month: "long", year: "numeric"
-                })}
+                {new Date(contrat.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
               </p>
             </div>
-            <span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-1 rounded-full">
-              ✅ Généré
-            </span>
+            <span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-1 rounded-full">✅ Généré</span>
           </div>
-
-          {/* Aperçu du contrat */}
           <details className="mt-2">
-            <summary className="text-xs text-[#0A2942] font-semibold cursor-pointer hover:underline">
-              Voir le contenu
-            </summary>
+            <summary className="text-xs text-[#0A2942] font-semibold cursor-pointer hover:underline">Voir le contenu</summary>
             <pre className="mt-3 bg-slate-50 rounded-xl p-4 text-xs text-slate-600 whitespace-pre-wrap font-mono overflow-auto max-h-64">
               {contrat.contenu}
             </pre>
           </details>
-
-          {/* Badge certification */}
           <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-            <p className="text-xs text-slate-400 italic">
-              Document généré et certifié par ITERIUM PARTNERS
-            </p>
-            <img
-              src="/certif/certified_stamp.png"
-              alt="Certified by ITERIUM Digital Trust"
-              className="h-16 opacity-90"
-            />
+            <p className="text-xs text-slate-400 italic">Document généré et certifié par ITERIUM PARTNERS</p>
+            <img src="/certif/certified_stamp.png" alt="Certified by ITERIUM Digital Trust" className="h-16 opacity-90" />
           </div>
-
         </div>
       ))}
     </div>
