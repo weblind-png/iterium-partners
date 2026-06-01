@@ -29,42 +29,25 @@ export default function PropositionExpertPage() {
   useEffect(() => {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push("/auth/login"); return; }
 
-      if (!user) {
-        router.push("/auth/login");
-        return;
-      }
-
-      // ✅ Lire l'ID depuis l'URL query string
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get("id");
-
-      if (!id) {
-        router.push("/expert/dashboard");
-        return;
-      }
+      if (!id) { router.push("/expert/dashboard"); return; }
 
       setDemandeId(id);
 
-      // Récupérer l'expert connecté
       const { data: expertData } = await supabase
-        .from("experts")
-        .select("*")
-        .eq("email", user.email)
-        .single();
-
+        .from("experts").select("*").eq("email", user.email).single();
       setExpert(expertData);
 
-      // Récupérer la demande avec les infos client
       const { data: demandeData } = await supabase
         .from("demandes")
         .select("*, profiles(prenom, nom, email, societe)")
         .eq("id", id)
         .single();
-
       setDemande(demandeData);
 
-      // Pré-remplir le TJM depuis le profil expert
       if (expertData?.tjm) {
         setFormData(prev => ({ ...prev, tjm: expertData.tjm }));
       }
@@ -108,6 +91,28 @@ export default function PropositionExpertPage() {
         .update({ statut: "proposition_envoyee" })
         .eq("id", demandeId);
 
+      // ✅ Notifier le client par email
+      if (demande?.profiles?.email) {
+        await fetch("/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "nouvelle_proposition",
+            to: demande.profiles.email,
+            data: {
+              clientPrenom: demande.profiles?.prenom || "Client",
+              expertPrenom: expert?.prenom,
+              expertNom: expert?.nom,
+              domaine: formData.domaine,
+              duree: formData.duree,
+              tjm: formData.tjm,
+              montantTotal: (parseInt(formData.duree) * parseFloat(formData.tjm)).toLocaleString("fr-FR"),
+              typeIntervention: formData.type,
+            },
+          }),
+        });
+      }
+
       setStatus({ loading: false, success: true, error: null });
 
     } catch (err) {
@@ -134,7 +139,6 @@ export default function PropositionExpertPage() {
 
       <section className="max-w-3xl mx-auto p-6">
 
-        {/* Infos demande client */}
         {demande && (
           <div className="bg-[#0A2942] text-white rounded-2xl p-5 mb-6">
             <p className="text-xs text-slate-400 mb-1">Demande de :</p>
@@ -154,7 +158,7 @@ export default function PropositionExpertPage() {
           <div className="p-6 bg-green-50 border border-green-300 text-green-700 rounded-xl text-center">
             <p className="text-2xl mb-2">🎉</p>
             <p className="font-bold mb-1">Proposition envoyée avec succès !</p>
-            <p className="text-sm mb-4">Le client sera notifié et pourra valider votre proposition.</p>
+            <p className="text-sm mb-4">Le client a été notifié par email et pourra valider votre proposition.</p>
             <button
               onClick={() => router.push("/expert/dashboard")}
               className="bg-[#0A2942] text-white font-bold py-2 px-6 rounded-xl hover:bg-slate-800 transition"
@@ -165,7 +169,6 @@ export default function PropositionExpertPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-3xl shadow p-8">
 
-            {/* Infos expert pré-remplies */}
             {expert && (
               <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#0A2942] text-white flex items-center justify-center font-bold text-sm">
@@ -182,30 +185,19 @@ export default function PropositionExpertPage() {
               <label className="block text-sm font-semibold text-slate-700 mb-1">
                 Domaine d'intervention *
               </label>
-              <input
-                type="text"
-                name="domaine"
-                placeholder="Ex : Cybersécurité NIS2, Transformation digitale, DAF de transition..."
-                value={formData.domaine}
-                onChange={handleChange}
-                required
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400"
-              />
+              <input type="text" name="domaine"
+                placeholder="Ex : Cybersécurité NIS2, Transformation digitale..."
+                value={formData.domaine} onChange={handleChange} required
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400" />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">
                 Description de votre approche *
               </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                required
-                rows={4}
-                placeholder="Décrivez comment vous allez répondre au besoin du client..."
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400"
-              />
+              <textarea name="description" value={formData.description} onChange={handleChange}
+                required rows={4} placeholder="Décrivez comment vous allez répondre au besoin du client..."
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400" />
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
@@ -213,43 +205,24 @@ export default function PropositionExpertPage() {
                 <label className="block text-sm font-semibold text-slate-700 mb-1">
                   <Clock className="h-4 w-4 text-[#F8B400] inline mr-1" /> Durée (jours) *
                 </label>
-                <input
-                  type="number"
-                  name="duree"
-                  value={formData.duree}
-                  onChange={handleChange}
-                  required
-                  min="1"
-                  placeholder="Ex: 10"
-                  className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800"
-                />
+                <input type="number" name="duree" value={formData.duree} onChange={handleChange}
+                  required min="1" placeholder="Ex: 10"
+                  className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800" />
               </div>
-
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">
                   <Euro className="h-4 w-4 text-[#F8B400] inline mr-1" /> TJM (€/jour) *
                 </label>
-                <input
-                  type="number"
-                  name="tjm"
-                  value={formData.tjm}
-                  onChange={handleChange}
-                  required
-                  min="100"
-                  className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800"
-                />
+                <input type="number" name="tjm" value={formData.tjm} onChange={handleChange}
+                  required min="100"
+                  className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800" />
               </div>
-
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">
                   Type d'intervention
                 </label>
-                <select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 bg-white"
-                >
+                <select name="type" value={formData.type} onChange={handleChange}
+                  className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 bg-white">
                   <option>Immédiate</option>
                   <option>Programmée</option>
                   <option>Distanciel</option>
@@ -259,7 +232,6 @@ export default function PropositionExpertPage() {
               </div>
             </div>
 
-            {/* Montant total calculé */}
             {formData.duree && formData.tjm && (
               <div className="bg-[#F8B400]/10 border border-[#F8B400] rounded-2xl p-4 text-center">
                 <p className="text-sm text-slate-600">Montant total estimé</p>
@@ -274,14 +246,9 @@ export default function PropositionExpertPage() {
               <label className="block text-sm font-semibold text-slate-700 mb-1">
                 Commentaire (facultatif)
               </label>
-              <textarea
-                name="commentaire"
-                value={formData.commentaire}
-                onChange={handleChange}
-                rows={2}
-                placeholder="Informations complémentaires, disponibilités spécifiques..."
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400"
-              />
+              <textarea name="commentaire" value={formData.commentaire} onChange={handleChange}
+                rows={2} placeholder="Informations complémentaires..."
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400" />
             </div>
 
             {status.error && (
@@ -290,11 +257,8 @@ export default function PropositionExpertPage() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={status.loading}
-              className="w-full bg-[#F8B400] text-[#0A2942] font-bold rounded-2xl py-4 hover:bg-yellow-400 transition disabled:opacity-50 flex items-center justify-center gap-2"
-            >
+            <button type="submit" disabled={status.loading}
+              className="w-full bg-[#F8B400] text-[#0A2942] font-bold rounded-2xl py-4 hover:bg-yellow-400 transition disabled:opacity-50 flex items-center justify-center gap-2">
               <Send className="h-5 w-5" />
               {status.loading ? "Envoi en cours..." : "Envoyer ma proposition au client"}
             </button>
