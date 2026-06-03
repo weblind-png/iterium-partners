@@ -96,7 +96,25 @@ export default function ExpertPage() {
         return;
       }
 
-      // 2. Mettre à jour le profil avec rôle expert
+      // 2. Upload photo si présente
+      let photoUrl = null;
+      if (photoFile && authData.user) {
+        const fileExt = photoFile.name.split(".").pop();
+        const fileName = `${authData.user.id}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("photos-experts")
+          .upload(fileName, photoFile, { upsert: true });
+
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage
+            .from("photos-experts")
+            .getPublicUrl(fileName);
+          photoUrl = urlData.publicUrl;
+        }
+      }
+
+      // 3. Mettre à jour le profil avec rôle expert
       if (authData.user) {
         await supabase
           .from("profiles")
@@ -109,7 +127,7 @@ export default function ExpertPage() {
           .eq("id", authData.user.id);
       }
 
-      // 3. Insérer dans la table experts
+      // 4. Insérer dans la table experts
       const { error: expertError } = await supabase.from("experts").insert([{
         prenom: form.prenom,
         nom: form.nom,
@@ -122,7 +140,7 @@ export default function ExpertPage() {
         localisation: form.localisation,
         tjm: form.tjm,
         disponibilite: selectedInterventions,
-        photo_url: null,
+        photo_url: photoUrl,
         cv_url: null,
         visible: false,
       }]);
@@ -172,116 +190,57 @@ export default function ExpertPage() {
             <p className="text-4xl mb-4">🎉</p>
             <p className="font-bold text-xl mb-2">Candidature envoyée !</p>
             <p className="text-sm leading-relaxed mb-6">{success}</p>
-            <a
-              href="/auth/login"
-              className="inline-block bg-[#0A2942] text-white font-bold py-3 px-8 rounded-2xl hover:bg-slate-800 transition"
-            >
+            <a href="/auth/login"
+              className="inline-block bg-[#0A2942] text-white font-bold py-3 px-8 rounded-2xl hover:bg-slate-800 transition">
               Aller à la page de connexion
             </a>
           </div>
         ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white text-slate-800 rounded-3xl p-8 shadow-2xl space-y-5"
-          >
+          <form onSubmit={handleSubmit}
+            className="bg-white text-slate-800 rounded-3xl p-8 shadow-2xl space-y-5">
 
             {/* Prénom et Nom */}
             <div className="grid md:grid-cols-2 gap-4">
-              <input
-                type="text"
-                name="prenom"
-                placeholder="Prénom *"
-                value={form.prenom}
-                onChange={handleChange}
-                required
-                className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400"
-              />
-              <input
-                type="text"
-                name="nom"
-                placeholder="Nom *"
-                value={form.nom}
-                onChange={handleChange}
-                required
-                className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400"
-              />
+              <input type="text" name="prenom" placeholder="Prénom *"
+                value={form.prenom} onChange={handleChange} required
+                className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
+              <input type="text" name="nom" placeholder="Nom *"
+                value={form.nom} onChange={handleChange} required
+                className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
             </div>
 
-            <input
-              type="email"
-              name="email"
-              placeholder="Email professionnel *"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400"
-            />
+            <input type="email" name="email" placeholder="Email professionnel *"
+              value={form.email} onChange={handleChange} required
+              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
 
-            <input
-              type="password"
-              name="password"
+            <input type="password" name="password"
               placeholder="Choisissez un mot de passe * (8 caractères min)"
-              value={form.password}
-              onChange={handleChange}
-              required
-              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400"
-            />
+              value={form.password} onChange={handleChange} required
+              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
 
-            <input
-              type="text"
-              name="telephone"
-              placeholder="Téléphone"
-              value={form.telephone}
-              onChange={handleChange}
-              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400"
-            />
+            <input type="text" name="telephone" placeholder="Téléphone"
+              value={form.telephone} onChange={handleChange}
+              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
 
-            <input
-              type="text"
-              name="linkedin"
-              placeholder="LinkedIn ou site professionnel"
-              value={form.linkedin}
-              onChange={handleChange}
-              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400"
-            />
+            <input type="text" name="linkedin" placeholder="LinkedIn ou site professionnel"
+              value={form.linkedin} onChange={handleChange}
+              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
 
-            <input
-              type="text"
-              name="metier"
-              placeholder="Fonction (DSI, CTO, DAF, RSSI...) *"
-              value={form.metier}
-              onChange={handleChange}
-              required
-              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400"
-            />
+            <input type="text" name="metier" placeholder="Fonction (DSI, CTO, DAF, RSSI...) *"
+              value={form.metier} onChange={handleChange} required
+              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
 
-            <textarea
-              name="experience"
-              placeholder="Résumé de votre parcours et expériences *"
-              rows={4}
-              value={form.experience}
-              onChange={handleChange}
-              required
-              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400"
-            />
+            <textarea name="experience" placeholder="Résumé de votre parcours et expériences *"
+              rows={4} value={form.experience} onChange={handleChange} required
+              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
 
-            <textarea
-              name="expertises"
-              placeholder="Expertises clés (SAP, Azure, NIS2, Cloud, Finance...)"
-              rows={3}
-              value={form.expertises}
-              onChange={handleChange}
-              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400"
-            />
+            <textarea name="expertises" placeholder="Expertises clés (SAP, Azure, NIS2, Cloud, Finance...)"
+              rows={3} value={form.expertises} onChange={handleChange}
+              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
 
             <div className="grid md:grid-cols-2 gap-4">
-              <select
-                name="localisation"
-                value={form.localisation}
-                onChange={handleChange}
-                required
-                className="w-full border border-slate-300 rounded-xl p-4 bg-white text-slate-800 appearance-none cursor-pointer"
-              >
+              <select name="localisation" value={form.localisation} onChange={handleChange} required
+                className="w-full border border-slate-300 rounded-xl p-4 bg-white text-slate-800 appearance-none cursor-pointer">
                 <option value="" disabled>Région principale de résidence</option>
                 <optgroup label="France Métropolitaine">
                   <option value="Auvergne-Rhône-Alpes">Auvergne-Rhône-Alpes</option>
@@ -313,7 +272,7 @@ export default function ExpertPage() {
                 </optgroup>
               </select>
 
-              {/* SYNC GOOGLE AGENDA */}
+              {/* Google Agenda */}
               <div className="w-full border border-slate-300 rounded-xl p-3 bg-slate-50 flex items-center justify-between">
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-500">Disponibilités réelles :</span>
@@ -321,15 +280,12 @@ export default function ExpertPage() {
                     {isGoogleConnected ? "🟢 Agenda Synchronisé" : "Synchroniser mon calendrier"}
                   </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleGoogleConnect}
+                <button type="button" onClick={handleGoogleConnect}
                   className={`text-xs font-bold py-2 px-3 rounded-lg transition flex items-center gap-2 ${
                     isGoogleConnected
                       ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                       : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-sm"
-                  }`}
-                >
+                  }`}>
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -340,14 +296,9 @@ export default function ExpertPage() {
                 </button>
               </div>
 
-              <input
-                type="text"
-                name="tjm"
-                placeholder="TJM indicatif (€ / jour)"
-                value={form.tjm}
-                onChange={handleChange}
-                className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400"
-              />
+              <input type="text" name="tjm" placeholder="TJM indicatif (€ / jour)"
+                value={form.tjm} onChange={handleChange}
+                className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
 
               <div className="border border-slate-300 rounded-xl p-4 flex flex-col justify-center space-y-2">
                 <span className="text-sm font-semibold text-slate-500 mb-1 block">Mode d'intervention souhaité :</span>
@@ -358,13 +309,10 @@ export default function ExpertPage() {
                     { name: "surSite", label: "Sur site" },
                   ].map(({ name, label }) => (
                     <label key={name} className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name={name}
+                      <input type="checkbox" name={name}
                         checked={interventionChoices[name]}
                         onChange={handleCheckboxChange}
-                        className="w-4 h-4 text-[#0A2942] border-slate-300 rounded focus:ring-[#0A2942]"
-                      />
+                        className="w-4 h-4 text-[#0A2942] border-slate-300 rounded focus:ring-[#0A2942]" />
                       <span>{label}</span>
                     </label>
                   ))}
@@ -379,25 +327,18 @@ export default function ExpertPage() {
               </label>
               <div className="grid sm:grid-cols-2 gap-4 items-center">
                 <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 bg-white rounded-xl p-4 text-center">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept=".jpg,.jpeg,.png"
-                    className="hidden"
-                  />
+                  <input type="file" ref={fileInputRef} onChange={handleFileChange}
+                    accept=".jpg,.jpeg,.png" className="hidden" />
                   {previewUrl ? (
                     <div>
                       <img src={previewUrl} alt="Aperçu" className="w-20 h-20 object-cover rounded-xl mx-auto border" />
-                      <button type="button" onClick={() => fileInputRef.current.click()} className="mt-2 text-xs text-blue-600 font-semibold underline">Changer</button>
+                      <button type="button" onClick={() => fileInputRef.current.click()}
+                        className="mt-2 text-xs text-blue-600 font-semibold underline">Changer</button>
                     </div>
                   ) : (
                     <div>
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current.click()}
-                        className="bg-[#0A2942] text-white text-sm font-bold py-2 px-4 rounded-xl hover:bg-slate-800 transition"
-                      >
+                      <button type="button" onClick={() => fileInputRef.current.click()}
+                        className="bg-[#0A2942] text-white text-sm font-bold py-2 px-4 rounded-xl hover:bg-slate-800 transition">
                         CHARGER MA PHOTO
                       </button>
                       <p className="text-[11px] text-slate-500 mt-2">Format carré uniquement (.jpg, .png)</p>
@@ -426,16 +367,11 @@ export default function ExpertPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">
-                {error}
-              </div>
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{error}</div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-4 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50"
-            >
+            <button type="submit" disabled={loading}
+              className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-4 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50">
               {loading ? "Envoi en cours..." : "Rejoindre le réseau ITERIUM PARTNERS"}
             </button>
 
