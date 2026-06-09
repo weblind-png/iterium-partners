@@ -22,6 +22,7 @@ export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState("recherche");
   const [abonnement, setAbonnement] = useState<"aucun" | "standard" | "premium">("aucun");
   const [generatingContrat, setGeneratingContrat] = useState<string | null>(null);
+  const [contratsGeneres, setContratsGeneres] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,7 +31,6 @@ export default function ClientDashboard() {
 
       const { data: profileData } = await supabase
         .from("profiles").select("*").eq("id", user.id).single();
-
       if (profileData?.role !== "client") { router.push("/auth/login"); return; }
 
       setProfile(profileData);
@@ -52,17 +52,23 @@ export default function ClientDashboard() {
         .order("created_at", { ascending: false });
       setDemandes(demandesData || []);
 
-      // ✅ Ajout de email dans le select experts
+      // ✅ Select complet avec toutes les coordonnées expert
       const { data: propositionsData } = await supabase
         .from("propositions")
-        .select("*, experts(prenom, nom, metier, email)")
+        .select("*, experts(prenom, nom, metier, email, telephone, linkedin, photo_url, localisation, tjm, expertises)")
         .eq("client_id", user.id)
         .order("created_at", { ascending: false });
       setPropositions(propositionsData || []);
 
+      // Récupérer les demandes ayant des contrats générés
+      const { data: contratsData } = await supabase
+        .from("contrats")
+        .select("demande_id")
+        .eq("client_id", user.id);
+      setContratsGeneres([...new Set((contratsData || []).map((c) => c.demande_id))]);
+
       setLoading(false);
     };
-
     fetchData();
   }, []);
 
@@ -79,26 +85,22 @@ export default function ClientDashboard() {
     setSearching(true);
     setHasSearched(true);
 
-    const { data: experts } = await supabase
-      .from("experts").select("*").eq("visible", true);
-
+    const { data: experts } = await supabase.from("experts").select("*").eq("visible", true);
     const query = searchQuery.toLowerCase();
-    const results = (experts || []).filter((expert) =>
-      expert.metier?.toLowerCase().includes(query) ||
-      expert.expertises?.toLowerCase().includes(query) ||
-      expert.experience?.toLowerCase().includes(query) ||
-      expert.localisation?.toLowerCase().includes(query) ||
-      expert.disponibilite?.toLowerCase().includes(query)
+    const results = (experts || []).filter((e) =>
+      e.metier?.toLowerCase().includes(query) ||
+      e.expertises?.toLowerCase().includes(query) ||
+      e.experience?.toLowerCase().includes(query) ||
+      e.localisation?.toLowerCase().includes(query) ||
+      e.disponibilite?.toLowerCase().includes(query)
     );
-
-    const scored = results.map((expert) => {
+    const scored = results.map((e) => {
       let score = 0;
-      if (expert.metier?.toLowerCase().includes(query)) score += 3;
-      if (expert.expertises?.toLowerCase().includes(query)) score += 2;
-      if (expert.experience?.toLowerCase().includes(query)) score += 1;
-      return { ...expert, score };
+      if (e.metier?.toLowerCase().includes(query)) score += 3;
+      if (e.expertises?.toLowerCase().includes(query)) score += 2;
+      if (e.experience?.toLowerCase().includes(query)) score += 1;
+      return { ...e, score };
     }).sort((a, b) => b.score - a.score);
-
     setFilteredExperts(scored);
     setSearching(false);
   };
@@ -115,15 +117,10 @@ export default function ClientDashboard() {
 
   const handleValiderProposition = async (propositionId: string, demandeId: string) => {
     const proposition = propositions.find((p) => p.id === propositionId);
-
     await supabase.from("propositions").update({ statut: "validee" }).eq("id", propositionId);
     await supabase.from("demandes").update({ statut: "validee" }).eq("id", demandeId);
+    setPropositions(propositions.map((p) => p.id === propositionId ? { ...p, statut: "validee" } : p));
 
-    setPropositions(propositions.map((p) =>
-      p.id === propositionId ? { ...p, statut: "validee" } : p
-    ));
-
-    // ✅ Notifier l'expert par email
     if (proposition?.experts?.email) {
       await fetch("/api/notifications", {
         method: "POST",
@@ -149,15 +146,14 @@ export default function ClientDashboard() {
     setGeneratingContrat(demandeId);
     try {
       await fetch("/api/contrats/generer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ demandeId, type: "nda" }),
       });
       await fetch("/api/contrats/generer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ demandeId, type: "mise_en_relation" }),
       });
+      setContratsGeneres([...contratsGeneres, demandeId]);
       alert("✅ NDA et contrat de mise en relation générés !");
       setActiveTab("contrats");
     } catch (error) {
@@ -169,7 +165,7 @@ export default function ClientDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A2942] flex items-center justify-center">
-        <p className="text-white text-lg">Chargement de votre espace...</p>
+        <p className="text-white text-lg">Chargement...</p>
       </div>
     );
   }
@@ -200,9 +196,7 @@ export default function ClientDashboard() {
               {abonnement === "standard" && "✔ Standard"}
               {abonnement === "aucun" && "Sans abonnement"}
             </span>
-            <button onClick={handleLogout} className="text-xs text-slate-400 hover:text-white transition">
-              Déconnexion
-            </button>
+            <button onClick={handleLogout} className="text-xs text-slate-400 hover:text-white transition">Déconnexion</button>
           </div>
         </div>
       </header>
@@ -233,7 +227,6 @@ export default function ClientDashboard() {
         </div>
       </div>
 
-      {/* CONTENU */}
       <div className="max-w-6xl mx-auto px-6 py-10">
 
         {/* ONGLET RECHERCHE */}
@@ -245,8 +238,7 @@ export default function ClientDashboard() {
               <div className="flex gap-3">
                 <input type="text"
                   placeholder="Ex: RSSI NIS2 urgence, DSI de transition, DAF clôture groupe..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   className="flex-1 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400" />
                 <button onClick={handleSearch} disabled={searching || !searchQuery.trim()}
@@ -260,9 +252,7 @@ export default function ClientDashboard() {
               <div className="bg-white rounded-3xl shadow p-12 text-center">
                 <p className="text-6xl mb-4">🎯</p>
                 <h3 className="text-xl font-bold text-[#0A2942] mb-2">Trouvez votre expert en quelques secondes</h3>
-                <p className="text-slate-500 text-sm max-w-md mx-auto">
-                  Décrivez votre besoin ci-dessus : type de mission, compétences recherchées, urgence, localisation...
-                </p>
+                <p className="text-slate-500 text-sm max-w-md mx-auto">Décrivez votre besoin ci-dessus...</p>
                 <div className="flex flex-wrap gap-2 justify-center mt-6">
                   {["RSSI NIS2", "DSI de transition", "DAF groupe", "CTO startup", "Expert SAP", "Audit cybersécurité"].map((s) => (
                     <button key={s} onClick={() => setSearchQuery(s)}
@@ -277,56 +267,47 @@ export default function ClientDashboard() {
                 {abonnement === "aucun" && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center">
                     <p className="text-yellow-800 font-semibold mb-2">⚠️ Abonnement requis</p>
-                    <p className="text-yellow-700 text-sm mb-4">Souscrivez pour contacter les experts.</p>
                     <button onClick={() => setActiveTab("abonnement")}
-                      className="bg-[#F8B400] text-[#0A2942] font-bold px-6 py-2 rounded-xl hover:bg-yellow-400 transition text-sm">
-                      Voir les formules
-                    </button>
+                      className="bg-[#F8B400] text-[#0A2942] font-bold px-6 py-2 rounded-xl text-sm">Voir les formules</button>
                   </div>
                 )}
                 {filteredExperts.length === 0 ? (
                   <div className="bg-white rounded-3xl shadow p-12 text-center text-slate-400">
                     <p className="text-4xl mb-4">🔍</p>
-                    <p className="font-semibold text-slate-600">Aucun expert trouvé</p>
-                    <p className="text-sm mt-1">Essayez avec d'autres mots clés</p>
+                    <p className="font-semibold">Aucun expert trouvé</p>
                   </div>
                 ) : (
-                  <>
-                    <p className="text-sm text-slate-500">
-                      <strong className="text-[#0A2942]">{filteredExperts.length} expert{filteredExperts.length > 1 ? "s" : ""}</strong> trouvé{filteredExperts.length > 1 ? "s" : ""} pour "{searchQuery}"
-                    </p>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredExperts.map((expert) => (
-                        <div key={expert.id} className="bg-white rounded-2xl shadow p-6 flex flex-col items-center text-center hover:shadow-lg transition">
-                          <div className="w-20 h-20 rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden mb-3 flex items-center justify-center">
-                            {expert.photo_url ? (
-                              <img src={expert.photo_url} alt={expert.prenom} className="w-full h-full object-cover" />
-                            ) : (
-                              <svg className="w-12 h-12 text-slate-400 mt-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                              </svg>
-                            )}
-                          </div>
-                          <p className="font-bold text-[#0A2942]">{expert.prenom} {expert.nom?.charAt(0)}.</p>
-                          <p className="text-sm text-slate-500 mb-2">{expert.metier}</p>
-                          <div className="flex flex-wrap gap-1 justify-center mb-2">
-                            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">✔ Expert Vérifié</span>
-                            {expert.disponibilite && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">🟢 Disponible</span>}
-                          </div>
-                          <p className="text-xs text-slate-400 mb-1">📍 {expert.localisation}</p>
-                          <p className="text-xs font-semibold text-[#0A2942] mb-2">💶 {expert.tjm} €/jour</p>
-                          <p className="text-xs text-slate-500 mb-4 line-clamp-2">{expert.expertises}</p>
-                          {expert.score > 0 && <p className="text-xs font-bold text-[#F8B400] mb-3">🤖 Score IA : {expert.score}/6</p>}
-                          <button onClick={() => handleContact(expert)}
-                            className={`w-full py-2 rounded-xl text-sm font-bold transition ${
-                              abonnement !== "aucun" ? "bg-[#0A2942] text-white hover:bg-slate-800" : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                            }`}>
-                            {abonnement !== "aucun" ? "Contacter cet expert" : "🔒 Abonnement requis"}
-                          </button>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredExperts.map((expert) => (
+                      <div key={expert.id} className="bg-white rounded-2xl shadow p-6 flex flex-col items-center text-center hover:shadow-lg transition">
+                        <div className="w-20 h-20 rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden mb-3 flex items-center justify-center">
+                          {expert.photo_url ? (
+                            <img src={expert.photo_url} alt={expert.prenom} className="w-full h-full object-cover" />
+                          ) : (
+                            <svg className="w-12 h-12 text-slate-400 mt-2" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                            </svg>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </>
+                        <p className="font-bold text-[#0A2942]">{expert.prenom} {expert.nom?.charAt(0)}.</p>
+                        <p className="text-sm text-slate-500 mb-2">{expert.metier}</p>
+                        <div className="flex flex-wrap gap-1 justify-center mb-2">
+                          <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">✔ Expert Vérifié</span>
+                          {expert.disponibilite && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">🟢 Disponible</span>}
+                        </div>
+                        <p className="text-xs text-slate-400 mb-1">📍 {expert.localisation}</p>
+                        <p className="text-xs font-semibold text-[#0A2942] mb-2">💶 {expert.tjm} €/jour</p>
+                        <p className="text-xs text-slate-500 mb-4 line-clamp-2">{expert.expertises}</p>
+                        {expert.score > 0 && <p className="text-xs font-bold text-[#F8B400] mb-3">🤖 Score IA : {expert.score}/6</p>}
+                        <button onClick={() => handleContact(expert)}
+                          className={`w-full py-2 rounded-xl text-sm font-bold transition ${
+                            abonnement !== "aucun" ? "bg-[#0A2942] text-white hover:bg-slate-800" : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                          }`}>
+                          {abonnement !== "aucun" ? "Contacter cet expert" : "🔒 Abonnement requis"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </>
             )}
@@ -340,68 +321,152 @@ export default function ClientDashboard() {
 
             {propositions.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
-                  📋 Propositions reçues ({propositions.length})
-                </h3>
-                {propositions.map((proposition) => (
-                  <div key={proposition.id} className={`bg-white rounded-2xl shadow p-6 border-l-4 ${
-                    proposition.statut === "validee" ? "border-emerald-400" : "border-blue-400"
-                  }`}>
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="font-bold text-[#0A2942]">{proposition.experts?.prenom} {proposition.experts?.nom?.charAt(0)}.</p>
-                        <p className="text-xs text-slate-500">{proposition.experts?.metier}</p>
-                        <p className="text-xs text-slate-400">{new Date(proposition.created_at).toLocaleDateString("fr-FR")}</p>
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">📋 Propositions reçues</h3>
+                {propositions.map((proposition) => {
+                  const contratsDisponibles = contratsGeneres.includes(proposition.demande_id);
+                  return (
+                    <div key={proposition.id} className={`bg-white rounded-2xl shadow p-6 border-l-4 ${
+                      proposition.statut === "validee" ? "border-emerald-400" : "border-blue-400"
+                    }`}>
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                          {/* ✅ Photo plus grande */}
+                          <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                            {proposition.experts?.photo_url ? (
+                              <img src={proposition.experts.photo_url} alt={proposition.experts.prenom}
+                                className="w-full h-full object-cover" />
+                            ) : (
+                              <svg className="w-10 h-10 text-slate-400 mt-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                              </svg>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-bold text-[#0A2942]">{proposition.experts?.prenom} {proposition.experts?.nom?.charAt(0)}.</p>
+                            <p className="text-xs text-slate-500">{proposition.experts?.metier}</p>
+                            <p className="text-xs text-slate-400">📍 {proposition.experts?.localisation}</p>
+                          </div>
+                        </div>
+                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                          proposition.statut === "validee" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
+                        }`}>
+                          {proposition.statut === "validee" ? "✅ Validée" : "📋 À valider"}
+                        </span>
                       </div>
-                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                        proposition.statut === "validee" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
-                      }`}>
-                        {proposition.statut === "validee" ? "✅ Validée" : "📋 À valider"}
-                      </span>
+
+                      {/* Détails proposition */}
+                      <div className="bg-slate-50 rounded-xl p-4 mb-4 grid grid-cols-3 gap-3 text-center">
+                        <div>
+                          <p className="text-xs text-slate-400">Durée</p>
+                          <p className="font-bold text-[#0A2942]">{proposition.duree} jour(s)</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400">TJM</p>
+                          <p className="font-bold text-[#0A2942]">{proposition.tjm} €/j</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400">Total estimé</p>
+                          <p className="font-bold text-[#F8B400]">{(proposition.duree * proposition.tjm).toLocaleString("fr-FR")} €</p>
+                        </div>
+                      </div>
+
+                      {proposition.description && (
+                        <div className="bg-slate-50 rounded-xl p-3 mb-4">
+                          <p className="text-xs font-semibold text-slate-500 mb-1">Approche proposée :</p>
+                          <p className="text-sm text-slate-700">{proposition.description}</p>
+                        </div>
+                      )}
+
+                      {/* ✅ COORDONNÉES DÉBLOQUÉES après contrats générés */}
+                      {proposition.statut === "validee" && contratsDisponibles && (
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 mb-4">
+                          <p className="text-sm font-bold text-emerald-800 mb-3">
+                            🔓 Coordonnées de l'expert débloquées
+                          </p>
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-emerald-300 shrink-0">
+                              {proposition.experts?.photo_url ? (
+                                <img src={proposition.experts.photo_url} alt={proposition.experts.prenom}
+                                  className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-slate-200 flex items-center justify-center">
+                                  <svg className="w-10 h-10 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-bold text-[#0A2942] text-lg">
+                                {proposition.experts?.prenom} {proposition.experts?.nom}
+                              </p>
+                              <p className="text-sm text-slate-600">{proposition.experts?.metier}</p>
+                            </div>
+                          </div>
+                          <div className="grid md:grid-cols-3 gap-3">
+                            {proposition.experts?.email && (
+                              <a href={`mailto:${proposition.experts.email}`}
+                                className="flex items-center gap-2 bg-white rounded-xl p-3 border border-emerald-200 hover:border-emerald-400 transition">
+                                <span className="text-lg">📧</span>
+                                <div>
+                                  <p className="text-xs text-slate-400">Email</p>
+                                  <p className="text-xs font-semibold text-[#0A2942] truncate">{proposition.experts.email}</p>
+                                </div>
+                              </a>
+                            )}
+                            {proposition.experts?.telephone && (
+                              <a href={`tel:${proposition.experts.telephone}`}
+                                className="flex items-center gap-2 bg-white rounded-xl p-3 border border-emerald-200 hover:border-emerald-400 transition">
+                                <span className="text-lg">📞</span>
+                                <div>
+                                  <p className="text-xs text-slate-400">Téléphone</p>
+                                  <p className="text-xs font-semibold text-[#0A2942]">{proposition.experts.telephone}</p>
+                                </div>
+                              </a>
+                            )}
+                            {proposition.experts?.linkedin && (
+                              <a href={proposition.experts.linkedin} target="_blank" rel="noopener noreferrer"
+                                className="flex items-center gap-2 bg-white rounded-xl p-3 border border-emerald-200 hover:border-emerald-400 transition">
+                                <span className="text-lg">💼</span>
+                                <div>
+                                  <p className="text-xs text-slate-400">LinkedIn</p>
+                                  <p className="text-xs font-semibold text-[#0A2942]">Voir le profil →</p>
+                                </div>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {proposition.statut === "en_attente" && (
+                        <button onClick={() => handleValiderProposition(proposition.id, proposition.demande_id)}
+                          className="w-full bg-emerald-500 text-white font-bold py-2 rounded-xl hover:bg-emerald-600 transition text-sm">
+                          ✅ Valider la proposition
+                        </button>
+                      )}
+
+                      {proposition.statut === "validee" && !contratsDisponibles && (
+                        <button onClick={() => handleGenererContrats(proposition.demande_id)}
+                          disabled={generatingContrat === proposition.demande_id}
+                          className="w-full bg-[#0A2942] text-white font-bold py-2 rounded-xl hover:bg-slate-800 transition text-sm disabled:opacity-50">
+                          {generatingContrat === proposition.demande_id ? "⏳ Génération en cours..." : "📄 Générer NDA + Contrat → Débloquer les coordonnées"}
+                        </button>
+                      )}
+
+                      {proposition.statut === "validee" && contratsDisponibles && (
+                        <div className="text-center text-xs text-emerald-600 font-semibold mt-2">
+                          ✅ Mission contractualisée — Bonne collaboration !
+                        </div>
+                      )}
                     </div>
-                    <div className="bg-slate-50 rounded-xl p-4 mb-4 grid grid-cols-3 gap-3 text-center">
-                      <div>
-                        <p className="text-xs text-slate-400">Durée</p>
-                        <p className="font-bold text-[#0A2942]">{proposition.duree} jour(s)</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-400">TJM</p>
-                        <p className="font-bold text-[#0A2942]">{proposition.tjm} €/j</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-400">Total estimé</p>
-                        <p className="font-bold text-[#F8B400]">{(proposition.duree * proposition.tjm).toLocaleString("fr-FR")} €</p>
-                      </div>
-                    </div>
-                    {proposition.description && (
-                      <div className="bg-slate-50 rounded-xl p-3 mb-4">
-                        <p className="text-xs font-semibold text-slate-500 mb-1">Approche proposée :</p>
-                        <p className="text-sm text-slate-700">{proposition.description}</p>
-                      </div>
-                    )}
-                    {proposition.statut === "en_attente" && (
-                      <button onClick={() => handleValiderProposition(proposition.id, proposition.demande_id)}
-                        className="w-full bg-emerald-500 text-white font-bold py-2 rounded-xl hover:bg-emerald-600 transition text-sm">
-                        ✅ Valider la proposition
-                      </button>
-                    )}
-                    {proposition.statut === "validee" && (
-                      <button onClick={() => handleGenererContrats(proposition.demande_id)}
-                        disabled={generatingContrat === proposition.demande_id}
-                        className="w-full bg-[#0A2942] text-white font-bold py-2 rounded-xl hover:bg-slate-800 transition text-sm disabled:opacity-50">
-                        {generatingContrat === proposition.demande_id ? "⏳ Génération en cours..." : "📄 Générer NDA + Contrat de mise en relation"}
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
             {demandes.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
-                  📬 Demandes envoyées ({demandes.length})
-                </h3>
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">📬 Demandes envoyées</h3>
                 {demandes.map((demande) => (
                   <div key={demande.id} className={`bg-white rounded-2xl shadow p-6 border-l-4 ${
                     demande.statut === "acceptee" || demande.statut === "validee" ? "border-emerald-400" :
@@ -466,7 +531,7 @@ export default function ClientDashboard() {
             <h2 className="text-xl font-bold text-[#0A2942]">Mon abonnement</h2>
             {abonnement !== "aucun" && (
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-emerald-700 text-sm font-semibold">
-                ✅ Vous êtes abonné au forfait {abonnement === "standard" ? "Essentiel" : "Groupe"}. Merci pour votre confiance !
+                ✅ Forfait {abonnement === "standard" ? "Essentiel" : "Groupe"} actif
               </div>
             )}
             <div className="grid md:grid-cols-2 gap-6">
@@ -474,14 +539,13 @@ export default function ClientDashboard() {
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-[#0A2942]">Forfait Essentiel</h3>
                   <div className="mt-2"><span className="text-3xl font-bold text-[#0A2942]">199€</span><span className="text-sm text-slate-500"> /mois</span></div>
-                  <p className="text-xs text-slate-400 mt-1">ou 1 990€/an (2 mois offerts)</p>
+                  <p className="text-xs text-slate-400 mt-1">ou 1 990€/an</p>
                 </div>
                 <ul className="space-y-2 text-sm text-slate-600 mb-6">
-                  <li>✅ Accès moteur de recherche IA</li>
-                  <li>✅ Consultation profils experts</li>
+                  <li>✅ Recherche IA d'experts</li>
                   <li>✅ 5 mises en relation / mois</li>
-                  <li>✅ Génération contrat automatique</li>
-                  <li>✅ Support email</li>
+                  <li>✅ Génération contrats automatique</li>
+                  <li>✅ Accès coordonnées après contractualisation</li>
                 </ul>
                 {abonnement === "standard" ? (
                   <div className="text-center text-sm font-bold text-emerald-600">✔ Votre abonnement actuel</div>
@@ -497,14 +561,12 @@ export default function ClientDashboard() {
                   <span className="text-xs bg-[#F8B400] text-[#0A2942] font-bold px-3 py-1 rounded-full">⭐ PREMIUM</span>
                   <h3 className="text-xl font-bold text-white mt-3">Forfait Groupe</h3>
                   <div className="mt-2"><span className="text-3xl font-bold text-[#F8B400]">490€</span><span className="text-sm text-slate-400"> /mois</span></div>
-                  <p className="text-xs text-slate-400 mt-1">ou 4 900€/an (2 mois offerts)</p>
+                  <p className="text-xs text-slate-400 mt-1">ou 4 900€/an</p>
                 </div>
                 <ul className="space-y-2 text-sm text-slate-300 mb-6">
                   <li>✅ Tout le forfait Essentiel</li>
-                  <li>✅ Mises en relation illimitées</li>
+                  <li>✅ Contacts illimités</li>
                   <li>✅ Multi-utilisateurs</li>
-                  <li>✅ Reporting & suivi missions</li>
-                  <li>✅ Account manager dédié</li>
                   <li>✅ NDA automatique inclus</li>
                 </ul>
                 {abonnement === "premium" ? (
@@ -525,20 +587,14 @@ export default function ClientDashboard() {
   );
 }
 
-// Composant liste des contrats avec badge certification
 function ContratsList({ clientId }: { clientId: string }) {
   const [contrats, setContrats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
   useEffect(() => {
     const fetchContrats = async () => {
-      const { data } = await supabase
-        .from("contrats")
+      const { data } = await supabase.from("contrats")
         .select("*, experts(prenom, nom, metier)")
         .eq("client_id", clientId)
         .order("created_at", { ascending: false });
@@ -549,13 +605,11 @@ function ContratsList({ clientId }: { clientId: string }) {
   }, [clientId]);
 
   if (loading) return <div className="text-center py-12 text-slate-400">Chargement...</div>;
-
   if (contrats.length === 0) {
     return (
       <div className="bg-white rounded-3xl shadow p-12 text-center text-slate-400">
         <p className="text-4xl mb-4">📄</p>
         <p className="font-semibold">Aucun contrat pour le moment</p>
-        <p className="text-sm mt-1">Vos contrats apparaîtront ici après validation d'une proposition</p>
       </div>
     );
   }
@@ -568,26 +622,20 @@ function ContratsList({ clientId }: { clientId: string }) {
           <div className="flex items-start justify-between mb-3">
             <div>
               <p className="font-bold text-[#0A2942]">
-                {contrat.type === "nda" ? "🔒 NDA — Accord de confidentialité" : "📋 Contrat de mise en relation"}
+                {contrat.type === "nda" ? "🔒 NDA" : "📋 Contrat de mise en relation"}
               </p>
-              <p className="text-xs text-slate-500">
-                avec {contrat.experts?.prenom} {contrat.experts?.nom} — {contrat.experts?.metier}
-              </p>
-              <p className="text-xs text-slate-400 mt-1">
-                {new Date(contrat.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
-              </p>
+              <p className="text-xs text-slate-500">avec {contrat.experts?.prenom} {contrat.experts?.nom} — {contrat.experts?.metier}</p>
+              <p className="text-xs text-slate-400">{new Date(contrat.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
             </div>
             <span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-1 rounded-full">✅ Généré</span>
           </div>
           <details className="mt-2">
             <summary className="text-xs text-[#0A2942] font-semibold cursor-pointer hover:underline">Voir le contenu</summary>
-            <pre className="mt-3 bg-slate-50 rounded-xl p-4 text-xs text-slate-600 whitespace-pre-wrap font-mono overflow-auto max-h-64">
-              {contrat.contenu}
-            </pre>
+            <pre className="mt-3 bg-slate-50 rounded-xl p-4 text-xs text-slate-600 whitespace-pre-wrap font-mono overflow-auto max-h-64">{contrat.contenu}</pre>
           </details>
           <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-            <p className="text-xs text-slate-400 italic">Document généré et certifié par ITERIUM PARTNERS</p>
-            <img src="/certif/certified_stamp.png" alt="Certified by ITERIUM Digital Trust" className="h-16 opacity-90" />
+            <p className="text-xs text-slate-400 italic">Certifié par ITERIUM PARTNERS</p>
+            <img src="/certif/certified_stamp.png" alt="Certified" className="h-16 opacity-90" />
           </div>
         </div>
       ))}
