@@ -12,6 +12,7 @@ const supabase = createClient(
 export default function ClientDashboard() {
   const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
+  const [userId, setUserId] = useState<string>("");
   const [filteredExperts, setFilteredExperts] = useState<any[]>([]);
   const [demandes, setDemandes] = useState<any[]>([]);
   const [propositions, setPropositions] = useState<any[]>([]);
@@ -28,6 +29,7 @@ export default function ClientDashboard() {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/auth/login"); return; }
+      setUserId(user.id);
 
       const { data: profileData } = await supabase
         .from("profiles").select("*").eq("id", user.id).single();
@@ -52,7 +54,6 @@ export default function ClientDashboard() {
         .order("created_at", { ascending: false });
       setDemandes(demandesData || []);
 
-      // ✅ Select complet avec toutes les coordonnées expert
       const { data: propositionsData } = await supabase
         .from("propositions")
         .select("*, experts(prenom, nom, metier, email, telephone, linkedin, photo_url, localisation, tjm, expertises)")
@@ -60,12 +61,14 @@ export default function ClientDashboard() {
         .order("created_at", { ascending: false });
       setPropositions(propositionsData || []);
 
-      // Récupérer les demandes ayant des contrats générés
+      // ✅ Récupérer les demande_id qui ont des contrats
       const { data: contratsData } = await supabase
         .from("contrats")
         .select("demande_id")
         .eq("client_id", user.id);
-      setContratsGeneres([...new Set((contratsData || []).map((c) => c.demande_id))]);
+
+      const demandeIds = [...new Set((contratsData || []).map((c: any) => c.demande_id).filter(Boolean))];
+      setContratsGeneres(demandeIds);
 
       setLoading(false);
     };
@@ -153,9 +156,10 @@ export default function ClientDashboard() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ demandeId, type: "mise_en_relation" }),
       });
+      // ✅ Mettre à jour localement
       setContratsGeneres([...contratsGeneres, demandeId]);
-      alert("✅ NDA et contrat de mise en relation générés !");
-      setActiveTab("contrats");
+      alert("✅ NDA et contrat générés ! Les coordonnées de l'expert sont maintenant disponibles.");
+      setActiveTab("demandes");
     } catch (error) {
       alert("Erreur lors de la génération des contrats.");
     }
@@ -172,6 +176,22 @@ export default function ClientDashboard() {
 
   const demandesEnAttente = demandes.filter((d) => d.statut === "en_attente");
   const propositionsEnAttente = propositions.filter((p) => p.statut === "en_attente");
+
+  // Composant photo carré arrondi
+  const PhotoCarre = ({ url, prenom, size = "md" }: { url?: string, prenom?: string, size?: "sm" | "md" | "lg" }) => {
+    const sizes = { sm: "w-10 h-10", md: "w-16 h-16", lg: "w-24 h-24" };
+    return (
+      <div className={`${sizes[size]} rounded-2xl overflow-hidden bg-slate-100 border-2 border-slate-200 flex items-center justify-center shrink-0`}>
+        {url ? (
+          <img src={url} alt={prenom} className="w-full h-full object-cover" />
+        ) : (
+          <svg className="w-2/3 h-2/3 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+          </svg>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#f9fafb]">
@@ -277,37 +297,43 @@ export default function ClientDashboard() {
                     <p className="font-semibold">Aucun expert trouvé</p>
                   </div>
                 ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredExperts.map((expert) => (
-                      <div key={expert.id} className="bg-white rounded-2xl shadow p-6 flex flex-col items-center text-center hover:shadow-lg transition">
-                        <div className="w-20 h-20 rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden mb-3 flex items-center justify-center">
-                          {expert.photo_url ? (
-                            <img src={expert.photo_url} alt={expert.prenom} className="w-full h-full object-cover" />
-                          ) : (
-                            <svg className="w-12 h-12 text-slate-400 mt-2" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                            </svg>
-                          )}
+                  <>
+                    <p className="text-sm text-slate-500">
+                      <strong className="text-[#0A2942]">{filteredExperts.length} expert{filteredExperts.length > 1 ? "s" : ""}</strong> trouvé{filteredExperts.length > 1 ? "s" : ""} pour "{searchQuery}"
+                    </p>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredExperts.map((expert) => (
+                        <div key={expert.id} className="bg-white rounded-2xl shadow p-6 flex flex-col items-center text-center hover:shadow-lg transition">
+                          {/* ✅ Photo carrée arrondie */}
+                          <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 border-2 border-slate-200 mb-4 flex items-center justify-center">
+                            {expert.photo_url ? (
+                              <img src={expert.photo_url} alt={expert.prenom} className="w-full h-full object-cover" />
+                            ) : (
+                              <svg className="w-14 h-14 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                              </svg>
+                            )}
+                          </div>
+                          <p className="font-bold text-[#0A2942]">{expert.prenom} {expert.nom?.charAt(0)}.</p>
+                          <p className="text-sm text-slate-500 mb-2">{expert.metier}</p>
+                          <div className="flex flex-wrap gap-1 justify-center mb-2">
+                            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">✔ Expert Vérifié</span>
+                            {expert.disponibilite && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">🟢 Disponible</span>}
+                          </div>
+                          <p className="text-xs text-slate-400 mb-1">📍 {expert.localisation}</p>
+                          <p className="text-xs font-semibold text-[#0A2942] mb-2">💶 {expert.tjm} €/jour</p>
+                          <p className="text-xs text-slate-500 mb-4 line-clamp-2">{expert.expertises}</p>
+                          {expert.score > 0 && <p className="text-xs font-bold text-[#F8B400] mb-3">🤖 Score IA : {expert.score}/6</p>}
+                          <button onClick={() => handleContact(expert)}
+                            className={`w-full py-2 rounded-xl text-sm font-bold transition ${
+                              abonnement !== "aucun" ? "bg-[#0A2942] text-white hover:bg-slate-800" : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                            }`}>
+                            {abonnement !== "aucun" ? "Contacter cet expert" : "🔒 Abonnement requis"}
+                          </button>
                         </div>
-                        <p className="font-bold text-[#0A2942]">{expert.prenom} {expert.nom?.charAt(0)}.</p>
-                        <p className="text-sm text-slate-500 mb-2">{expert.metier}</p>
-                        <div className="flex flex-wrap gap-1 justify-center mb-2">
-                          <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">✔ Expert Vérifié</span>
-                          {expert.disponibilite && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">🟢 Disponible</span>}
-                        </div>
-                        <p className="text-xs text-slate-400 mb-1">📍 {expert.localisation}</p>
-                        <p className="text-xs font-semibold text-[#0A2942] mb-2">💶 {expert.tjm} €/jour</p>
-                        <p className="text-xs text-slate-500 mb-4 line-clamp-2">{expert.expertises}</p>
-                        {expert.score > 0 && <p className="text-xs font-bold text-[#F8B400] mb-3">🤖 Score IA : {expert.score}/6</p>}
-                        <button onClick={() => handleContact(expert)}
-                          className={`w-full py-2 rounded-xl text-sm font-bold transition ${
-                            abonnement !== "aucun" ? "bg-[#0A2942] text-white hover:bg-slate-800" : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                          }`}>
-                          {abonnement !== "aucun" ? "Contacter cet expert" : "🔒 Abonnement requis"}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </>
             )}
@@ -323,27 +349,27 @@ export default function ClientDashboard() {
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">📋 Propositions reçues</h3>
                 {propositions.map((proposition) => {
-                  const contratsDisponibles = contratsGeneres.includes(proposition.demande_id);
+                  const contratsOk = contratsGeneres.includes(proposition.demande_id);
                   return (
                     <div key={proposition.id} className={`bg-white rounded-2xl shadow p-6 border-l-4 ${
                       proposition.statut === "validee" ? "border-emerald-400" : "border-blue-400"
                     }`}>
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-4">
-                          {/* ✅ Photo plus grande */}
-                          <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                          {/* ✅ Photo carrée arrondie plus grande */}
+                          <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 border-2 border-slate-200 flex items-center justify-center shrink-0">
                             {proposition.experts?.photo_url ? (
                               <img src={proposition.experts.photo_url} alt={proposition.experts.prenom}
                                 className="w-full h-full object-cover" />
                             ) : (
-                              <svg className="w-10 h-10 text-slate-400 mt-1" fill="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-12 h-12 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                               </svg>
                             )}
                           </div>
                           <div>
-                            <p className="font-bold text-[#0A2942]">{proposition.experts?.prenom} {proposition.experts?.nom?.charAt(0)}.</p>
-                            <p className="text-xs text-slate-500">{proposition.experts?.metier}</p>
+                            <p className="font-bold text-[#0A2942] text-lg">{proposition.experts?.prenom} {proposition.experts?.nom?.charAt(0)}.</p>
+                            <p className="text-sm text-slate-500">{proposition.experts?.metier}</p>
                             <p className="text-xs text-slate-400">📍 {proposition.experts?.localisation}</p>
                           </div>
                         </div>
@@ -354,7 +380,7 @@ export default function ClientDashboard() {
                         </span>
                       </div>
 
-                      {/* Détails proposition */}
+                      {/* Détails */}
                       <div className="bg-slate-50 rounded-xl p-4 mb-4 grid grid-cols-3 gap-3 text-center">
                         <div>
                           <p className="text-xs text-slate-400">Durée</p>
@@ -377,64 +403,69 @@ export default function ClientDashboard() {
                         </div>
                       )}
 
-                      {/* ✅ COORDONNÉES DÉBLOQUÉES après contrats générés */}
-                      {proposition.statut === "validee" && contratsDisponibles && (
+                      {/* ✅ COORDONNÉES DÉBLOQUÉES */}
+                      {proposition.statut === "validee" && contratsOk && (
                         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 mb-4">
-                          <p className="text-sm font-bold text-emerald-800 mb-3">
-                            🔓 Coordonnées de l'expert débloquées
-                          </p>
+                          <p className="text-sm font-bold text-emerald-800 mb-4">🔓 Coordonnées de l'expert débloquées</p>
                           <div className="flex items-center gap-4 mb-4">
-                            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-emerald-300 shrink-0">
+                            {/* Grande photo carrée */}
+                            <div className="w-28 h-28 rounded-2xl overflow-hidden border-2 border-emerald-300 shrink-0">
                               {proposition.experts?.photo_url ? (
                                 <img src={proposition.experts.photo_url} alt={proposition.experts.prenom}
                                   className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full bg-slate-200 flex items-center justify-center">
-                                  <svg className="w-10 h-10 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-16 h-16 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                                   </svg>
                                 </div>
                               )}
                             </div>
                             <div>
-                              <p className="font-bold text-[#0A2942] text-lg">
+                              <p className="font-bold text-[#0A2942] text-xl">
                                 {proposition.experts?.prenom} {proposition.experts?.nom}
                               </p>
-                              <p className="text-sm text-slate-600">{proposition.experts?.metier}</p>
+                              <p className="text-slate-600">{proposition.experts?.metier}</p>
+                              <p className="text-sm text-slate-400">📍 {proposition.experts?.localisation}</p>
+                              <p className="text-sm font-semibold text-[#0A2942] mt-1">💶 {proposition.experts?.tjm} €/jour</p>
                             </div>
                           </div>
+
                           <div className="grid md:grid-cols-3 gap-3">
                             {proposition.experts?.email && (
                               <a href={`mailto:${proposition.experts.email}`}
-                                className="flex items-center gap-2 bg-white rounded-xl p-3 border border-emerald-200 hover:border-emerald-400 transition">
-                                <span className="text-lg">📧</span>
-                                <div>
+                                className="flex items-center gap-2 bg-white rounded-xl p-3 border border-emerald-200 hover:border-emerald-400 transition group">
+                                <span className="text-xl">📧</span>
+                                <div className="overflow-hidden">
                                   <p className="text-xs text-slate-400">Email</p>
-                                  <p className="text-xs font-semibold text-[#0A2942] truncate">{proposition.experts.email}</p>
+                                  <p className="text-xs font-semibold text-[#0A2942] truncate group-hover:text-emerald-700">{proposition.experts.email}</p>
                                 </div>
                               </a>
                             )}
                             {proposition.experts?.telephone && (
                               <a href={`tel:${proposition.experts.telephone}`}
-                                className="flex items-center gap-2 bg-white rounded-xl p-3 border border-emerald-200 hover:border-emerald-400 transition">
-                                <span className="text-lg">📞</span>
+                                className="flex items-center gap-2 bg-white rounded-xl p-3 border border-emerald-200 hover:border-emerald-400 transition group">
+                                <span className="text-xl">📞</span>
                                 <div>
                                   <p className="text-xs text-slate-400">Téléphone</p>
-                                  <p className="text-xs font-semibold text-[#0A2942]">{proposition.experts.telephone}</p>
+                                  <p className="text-xs font-semibold text-[#0A2942] group-hover:text-emerald-700">{proposition.experts.telephone}</p>
                                 </div>
                               </a>
                             )}
                             {proposition.experts?.linkedin && (
                               <a href={proposition.experts.linkedin} target="_blank" rel="noopener noreferrer"
-                                className="flex items-center gap-2 bg-white rounded-xl p-3 border border-emerald-200 hover:border-emerald-400 transition">
-                                <span className="text-lg">💼</span>
+                                className="flex items-center gap-2 bg-white rounded-xl p-3 border border-emerald-200 hover:border-emerald-400 transition group">
+                                <span className="text-xl">💼</span>
                                 <div>
                                   <p className="text-xs text-slate-400">LinkedIn</p>
-                                  <p className="text-xs font-semibold text-[#0A2942]">Voir le profil →</p>
+                                  <p className="text-xs font-semibold text-[#0A2942] group-hover:text-emerald-700">Voir le profil →</p>
                                 </div>
                               </a>
                             )}
                           </div>
+                          <p className="text-xs text-emerald-600 mt-3 text-center font-semibold">
+                            ✅ Mission contractualisée — Bonne collaboration !
+                          </p>
                         </div>
                       )}
 
@@ -445,18 +476,14 @@ export default function ClientDashboard() {
                         </button>
                       )}
 
-                      {proposition.statut === "validee" && !contratsDisponibles && (
+                      {proposition.statut === "validee" && !contratsOk && (
                         <button onClick={() => handleGenererContrats(proposition.demande_id)}
                           disabled={generatingContrat === proposition.demande_id}
-                          className="w-full bg-[#0A2942] text-white font-bold py-2 rounded-xl hover:bg-slate-800 transition text-sm disabled:opacity-50">
-                          {generatingContrat === proposition.demande_id ? "⏳ Génération en cours..." : "📄 Générer NDA + Contrat → Débloquer les coordonnées"}
+                          className="w-full bg-[#0A2942] text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition text-sm disabled:opacity-50">
+                          {generatingContrat === proposition.demande_id
+                            ? "⏳ Génération en cours..."
+                            : "📄 Générer NDA + Contrat → Débloquer les coordonnées"}
                         </button>
-                      )}
-
-                      {proposition.statut === "validee" && contratsDisponibles && (
-                        <div className="text-center text-xs text-emerald-600 font-semibold mt-2">
-                          ✅ Mission contractualisée — Bonne collaboration !
-                        </div>
                       )}
                     </div>
                   );
@@ -474,11 +501,12 @@ export default function ClientDashboard() {
                   }`}>
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center shrink-0">
+                        {/* Photo carrée petite */}
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
                           {demande.experts?.photo_url ? (
                             <img src={demande.experts.photo_url} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <svg className="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-7 h-7 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                             </svg>
                           )}
