@@ -50,70 +50,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* COMPARATIF */}
-      <section className="bg-slate-50 py-16 border-b">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-[#0A2942]">Pourquoi choisir ITERIUM PARTNERS ?</h2>
-            <p className="text-slate-600 mt-3">Comparez et faites le calcul vous-même.</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm bg-white rounded-2xl shadow overflow-hidden">
-              <thead>
-                <tr className="bg-[#0A2942] text-white">
-                  <th className="px-6 py-4 text-left"></th>
-                  <th className="px-6 py-4 text-center">Cabinet recrutement</th>
-                  <th className="px-6 py-4 text-center">Plateformes freelance</th>
-                  <th className="px-6 py-4 text-center bg-[#F8B400] text-[#0A2942]">ITERIUM PARTNERS</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                <tr>
-                  <td className="px-6 py-4 font-semibold text-slate-700">Coût</td>
-                  <td className="px-6 py-4 text-center text-red-600 font-semibold">15-25% du salaire annuel</td>
-                  <td className="px-6 py-4 text-center text-orange-500 font-semibold">10-15% par mission</td>
-                  <td className="px-6 py-4 text-center text-emerald-600 font-bold">199€/mois fixe</td>
-                </tr>
-                <tr className="bg-slate-50">
-                  <td className="px-6 py-4 font-semibold text-slate-700">Accès aux experts</td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center text-slate-500">1 freelance à la fois</td>
-                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Illimité</span></td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 font-semibold text-slate-700">Délai de mise en relation</td>
-                  <td className="px-6 py-4 text-center text-red-500">4 à 8 semaines</td>
-                  <td className="px-6 py-4 text-center text-orange-500">Variable</td>
-                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Immédiat</span></td>
-                </tr>
-                <tr className="bg-slate-50">
-                  <td className="px-6 py-4 font-semibold text-slate-700">Contrat automatique</td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Oui</span></td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 font-semibold text-slate-700">Multi-experts simultanés</td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Oui</span></td>
-                </tr>
-                <tr className="bg-slate-50">
-                  <td className="px-6 py-4 font-semibold text-slate-700">Missions urgentes</td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center text-orange-500">Difficile</td>
-                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Express</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div className="text-center mt-8">
-            <p className="text-slate-600 text-sm italic">
-              Exemple : 3 mises en relation réussies dans l'année = économie de <strong className="text-[#0A2942]">30 000 à 50 000€</strong> vs un cabinet de recrutement.
-            </p>
-          </div>
-        </div>
-      </section>
+     
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#0A2942] text-white">
@@ -259,7 +196,71 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
+ {/* COMPARATIF */}
+      <section className="bg-slate-50 py-16 border-b">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-[#0A2942]">Pourquoi choisir ITERIUM PARTNERS ?</h2>
+            <p className="text-slate-600 mt-3">Comparez et faites le calcul vous-même.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm bg-white rounded-2xl shadow overflow-hidden">
+              <thead>
+                <tr className="bg-[#0A2942] text-white">
+                  <th className="px-6 py-4 text-left"></th>
+                  <th className="px-6 py-4 text-center">Cabinet recrutement</th>
+                  <th className="px-6 py-4 text-center">Plateformes freelance</th>
+                  <th className="px-6 py-4 text-center bg-[#F8B400] text-[#0A2942]">ITERIUM PARTNERS</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                <tr>
+                  <td className="px-6 py-4 font-semibold text-slate-700">Coût</td>
+                  <td className="px-6 py-4 text-center text-red-600 font-semibold">15-25% du salaire annuel</td>
+                  <td className="px-6 py-4 text-center text-orange-500 font-semibold">10-15% par mission</td>
+                  <td className="px-6 py-4 text-center text-emerald-600 font-bold">199€/mois fixe</td>
+                </tr>
+                <tr className="bg-slate-50">
+                  <td className="px-6 py-4 font-semibold text-slate-700">Accès aux experts</td>
+                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
+                  <td className="px-6 py-4 text-center text-slate-500">1 freelance à la fois</td>
+                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Illimité</span></td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 font-semibold text-slate-700">Délai de mise en relation</td>
+                  <td className="px-6 py-4 text-center text-red-500">4 à 8 semaines</td>
+                  <td className="px-6 py-4 text-center text-orange-500">Variable</td>
+                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Immédiat</span></td>
+                </tr>
+                <tr className="bg-slate-50">
+                  <td className="px-6 py-4 font-semibold text-slate-700">Contrat automatique</td>
+                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
+                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
+                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Oui</span></td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 font-semibold text-slate-700">Multi-experts simultanés</td>
+                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
+                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
+                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Oui</span></td>
+                </tr>
+                <tr className="bg-slate-50">
+                  <td className="px-6 py-4 font-semibold text-slate-700">Missions urgentes</td>
+                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
+                  <td className="px-6 py-4 text-center text-orange-500">Difficile</td>
+                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Express</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="text-center mt-8">
+            <p className="text-slate-600 text-sm italic">
+              Exemple : 3 mises en relation réussies dans l'année = économie de <strong className="text-[#0A2942]">30 000 à 50 000€</strong> vs un cabinet de recrutement.
+            </p>
+          </div>
+        </div>
+      </section>
+      
       {/* CTA FINAL */}
       <section className="bg-[#0A2942] text-white py-24">
         <div className="max-w-4xl mx-auto px-6 text-center">
