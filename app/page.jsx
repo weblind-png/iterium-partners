@@ -46,6 +46,13 @@ export default function HomePage() {
           <p className="mt-5 text-slate-600 text-lg leading-relaxed">
             Contrairement aux modèles traditionnels de recrutement, la plateforme permet une mise en relation
             directe entre entreprises et experts indépendants, sans processus lourds ni marges excessives.
+
+                                                             Notre ADN
+            Nous conjuguons exigence, indépendance et esprit entrepreneurial pour accompagner nos partenaires sur le long terme.
+
+            ITERIUM PARTENRS, est une plateforme créée par des experts qui vous fournis des ressources en direct.
+            Nous réinventons le business model du recrutement, 2026 marque un tourant dans ce domaine, nos clients n'ont plus
+            forcément besoin d'une ressources permanante, ils cherchent de la réactivité et de la sponsanéité à répondre à des besoins urgents ou ponctuels.
           </p>
         </div>
       </section>
