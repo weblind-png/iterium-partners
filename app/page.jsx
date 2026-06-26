@@ -20,7 +20,7 @@ export default function HomePage() {
       <header className="bg-[#0A2942] text-white border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-14 w-auto" />
+            <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-18 w-auto" />
             <div>
               <div className="font-bold text-lg">ITERIUM PARTNERS</div>
               <div className="text-xs text-slate-300">Plateforme IA B2B de mise en relation experts & entreprises</div>
