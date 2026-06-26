@@ -200,7 +200,9 @@ export default function ClientDashboard() {
       <header className="bg-[#0A2942] text-white px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-10 w-auto" />
+            <a href="/" className="hover:opacity-80 transition">
+  <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-14 w-auto" />
+</a>
             <div>
               <p className="text-xs text-slate-400">Espace Client</p>
               <p className="font-bold">{profile?.prenom} {profile?.nom}</p>
