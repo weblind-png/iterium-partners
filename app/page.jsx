@@ -37,22 +37,32 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* POSITIONNEMENT */}
-      <section className="bg-white py-12 border-b">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <p className="text-xl text-[#0A2942] font-semibold leading-relaxed">
+        {/* POSITIONNEMENT */}
+      <section className="bg-white py-16 border-b">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <p className="text-xl text-[#0A2942] font-semibold leading-relaxed mb-8">
             ITERIUM PARTNERS réinvente l'accès à l'expertise senior.
           </p>
-          <p className="mt-5 text-slate-600 text-lg leading-relaxed">
+
+          <p className="text-slate-600 text-lg leading-relaxed mb-6">
             Contrairement aux modèles traditionnels de recrutement, la plateforme permet une mise en relation
             directe entre entreprises et experts indépendants, sans processus lourds ni marges excessives.
+          </p>
 
-                                                             Notre ADN
-            Nous conjuguons exigence, indépendance et esprit entrepreneurial pour accompagner nos partenaires sur le long terme.
+          <div className="inline-block text-left bg-slate-50 rounded-2xl p-6 mb-6">
+            <p className="text-xs font-bold text-[#F8B400] uppercase tracking-wide mb-2">Notre ADN</p>
+            <p className="text-slate-600 leading-relaxed">
+              Nous conjuguons exigence, indépendance et esprit entrepreneurial pour accompagner
+              nos partenaires sur le long terme.
+            </p>
+          </div>
 
-            ITERIUM PARTENRS, est une plateforme créée par des experts qui vous fournis des ressources en direct.
-            Nous réinventons le business model du recrutement, 2026 marque un tournant dans ce domaine, nos clients n'ont plus
-            forcément besoin d'une ressources permanante, ils cherchent de la réactivité et de la sponsanéité à répondre à des besoins urgents ou ponctuels.
+          <p className="text-slate-600 text-lg leading-relaxed">
+            ITERIUM PARTNERS est une plateforme créée par des experts, pour des experts.
+            Nous réinventons le business model du recrutement : 2026 marque un tournant dans ce domaine,
+            nos clients n'ont plus forcément besoin d'une ressource permanente — ils cherchent
+            de la <strong className="text-[#0A2942]">réactivité</strong> et de la{" "}
+            <strong className="text-[#0A2942]">spontanéité</strong> pour répondre à des besoins urgents ou ponctuels.
           </p>
         </div>
       </section>
