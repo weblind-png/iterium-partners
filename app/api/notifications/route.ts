@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
               </div>
               <p style="color: #475569;">Connectez-vous à votre espace pour accepter ou refuser cette demande :</p>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.NEXT_PUBLIC_BASE_URL}/expert/dashboard" 
+                <a href="${process.env.NEXT_PUBLIC_BASE_URL}/auth/login?redirect=/expert/dashboard" 
                    style="background: #F8B400; color: #0A2942; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block;">
                   Voir la demande →
                 </a>
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
               </div>
               <p style="color: #475569;">L'expert va maintenant vous envoyer sa proposition d'intervention. Vous serez notifié dès qu'elle sera disponible.</p>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.NEXT_PUBLIC_BASE_URL}/client/dashboard" 
+                <a href="${process.env.NEXT_PUBLIC_BASE_URL}/auth/login?redirect=/client/dashboard" 
                    style="background: #F8B400; color: #0A2942; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block;">
                   Voir mon espace →
                 </a>
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
                 <p style="margin: 0;"><strong>Montant total :</strong> <span style="color: #F8B400; font-weight: bold;">${data.montantTotal} €</span></p>
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.NEXT_PUBLIC_BASE_URL}/client/dashboard" 
+                <a href="${process.env.NEXT_PUBLIC_BASE_URL}/auth/login?redirect=/client/dashboard" 
                    style="background: #F8B400; color: #0A2942; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block;">
                   Voir la proposition →
                 </a>
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
               </div>
               <p style="color: #475569;">Les contrats NDA et de mise en relation ont été générés automatiquement. La mission peut démarrer !</p>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.NEXT_PUBLIC_BASE_URL}/expert/dashboard" 
+                <a href="${process.env.NEXT_PUBLIC_BASE_URL}/auth/login?redirect=/expert/dashboard" 
                    style="background: #F8B400; color: #0A2942; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block;">
                   Voir mon espace →
                 </a>
