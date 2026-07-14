@@ -26,7 +26,7 @@ export default function ResetPasswordPage() {
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://iteriumpartners.com/auth/update-password",
+  redirectTo: "https://iteriumpartners.com/auth/update-password",
     });
 
     if (error) {
