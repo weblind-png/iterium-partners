@@ -14,11 +14,12 @@ export async function GET(request: NextRequest) {
 
     await supabase.auth.exchangeCodeForSession(code);
 
-    // ✅ Si c'est un reset password, rediriger vers la page de mise à jour
+    // ✅ Reset password → rediriger vers update-password
     if (type === "recovery") {
       return NextResponse.redirect(new URL("/auth/update-password", requestUrl.origin));
     }
 
+    // Connexion normale → rediriger selon le rôle
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       const { data: profile } = await supabase
