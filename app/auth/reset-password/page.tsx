@@ -26,13 +26,13 @@ export default function ResetPasswordPage() {
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-  redirectTo: "https://iteriumpartners.com/auth/callback?type=recovery",
+      redirectTo: "https://iteriumpartners.com/auth/callback?type=recovery",
     });
 
     if (error) {
       setError("Erreur lors de l'envoi. Vérifiez votre email.");
     } else {
-      setSuccess("Un email de réinitialisation vous a été envoyé. Vérifiez votre boîte mail.");
+      setSuccess("✅ Email envoyé ! Vérifiez votre boîte mail et cliquez sur le lien.");
     }
 
     setLoading(false);
@@ -41,13 +41,9 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen bg-[#0A2942] flex items-center justify-center px-4">
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
-
-        {/* Logo */}
         <div className="text-center mb-8">
           <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-12 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-[#0A2942]">
-            Mot de passe oublié
-          </h1>
+          <h1 className="text-2xl font-bold text-[#0A2942]">Mot de passe oublié</h1>
           <p className="text-slate-500 text-sm mt-1">
             Saisissez votre email pour recevoir un lien de réinitialisation
           </p>
@@ -59,33 +55,24 @@ export default function ResetPasswordPage() {
             placeholder="Email professionnel *"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleReset()}
             className="w-full border border-slate-300 rounded-xl p-3 text-sm"
           />
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">
-              {error}
-            </div>
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{error}</div>
           )}
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-3">
-              {success}
-            </div>
+            <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-3">{success}</div>
           )}
 
-          <button
-            onClick={handleReset}
-            disabled={loading}
-            className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50"
-          >
+          <button onClick={handleReset} disabled={loading}
+            className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50">
             {loading ? "Envoi en cours..." : "Envoyer le lien"}
           </button>
 
           <div className="text-center">
-            <a
-              href="/auth/login"
-              className="text-xs text-slate-500 hover:text-[#0A2942]"
-            >
+            <a href="/auth/login" className="text-xs text-slate-500 hover:text-[#0A2942]">
               ← Retour à la connexion
             </a>
           </div>
