@@ -70,7 +70,7 @@ export default function HomePage() {
 
             <p className="text-xl text-slate-200 leading-relaxed mb-10 max-w-2xl">
               ITERIUM PARTNERS connecte en quelques heures les entreprises avec les experts seniors
-              disponibles — DSI, RSSI, DAF, CTO — sans processus lourds ni marges excessives.
+              disponibles DSI, RSSI, DAF, CTO sans processus lourds ni marges excessives.
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -87,7 +87,7 @@ export default function HomePage() {
             <div className="flex flex-wrap gap-6 mt-12 text-sm text-slate-300">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#F8B400]" />
-                Mise en relation sous 48h
+                Mise en relation immédiate
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#F8B400]" />
@@ -111,7 +111,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <p className="text-4xl font-extrabold text-[#0A2942]">48h</p>
+              <p className="text-4xl font-extrabold text-[#0A2942]">24h</p>
               <p className="text-sm font-semibold text-[#0A2942]/70 mt-1">Délai moyen de mise en relation</p>
             </div>
             <div>
