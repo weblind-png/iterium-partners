@@ -10,6 +10,9 @@ import {
   Search,
   Briefcase,
   X,
+  Clock,
+  TrendingUp,
+  Award,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -17,17 +20,17 @@ export default function HomePage() {
     <main className="min-h-screen bg-white text-slate-800">
 
       {/* HEADER */}
-      <header className="bg-[#0A2942] text-white border-b border-white/10">
+      <header className="bg-[#0A2942] text-white border-b border-white/10 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-18 w-auto" />
+            <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-14 w-auto" />
             <div>
-              <div className="font-bold text-lg">ITERIUM PARTNERS</div>
-              <div className="text-xs text-slate-300">Plateforme IA B2B de mise en relation experts & entreprises</div>
+              <div className="font-bold text-lg tracking-wide">ITERIUM PARTNERS</div>
+              <div className="text-xs text-slate-300">Plateforme IA B2B · Experts seniors & Entreprises</div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/expert" className="border border-white/20 px-5 py-2 rounded-xl text-sm font-medium hover:bg-white/10 transition">
+            <Link href="/expert" className="border border-white/20 px-5 py-2 rounded-xl text-sm font-medium hover:bg-white/10 transition hidden md:block">
               Rejoindre le réseau expert
             </Link>
             <Link href="/auth/login" className="bg-[#F8B400] text-[#0A2942] px-5 py-2 rounded-xl text-sm font-bold hover:bg-yellow-400 transition">
@@ -37,26 +40,113 @@ export default function HomePage() {
         </div>
       </header>
 
-        {/* POSITIONNEMENT */}
-      <section className="bg-white py-16 border-b">
+      {/* HERO — Bannière LinkedIn + Slogan */}
+      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
+        {/* Bannière en fond */}
+        <div className="absolute inset-0">
+          <img
+            src="https://res.cloudinary.com/dlo1bbmlf/image/upload/v1784651189/baniere_Iterium_PARTNERS_tle2ua.png"
+            alt="ITERIUM PARTNERS"
+            className="w-full h-full object-cover"
+          />
+          {/* Overlay dégradé pour lisibilité */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0A2942]/90 via-[#0A2942]/70 to-[#0A2942]/30" />
+        </div>
+
+        {/* Contenu hero */}
+        <div className="relative z-10 max-w-7xl mx-auto px-6 py-24">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 bg-[#F8B400]/20 border border-[#F8B400]/40 rounded-full px-4 py-2 text-sm text-[#F8B400] mb-8">
+              <Sparkles className="w-4 h-4" />
+              Plateforme IA B2B de mise en relation · Lancée en 2026
+            </div>
+
+            {/* Slogan principal */}
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight mb-6">
+              Les dirigeants ont besoin
+              <span className="block text-[#F8B400]">d'expérience.</span>
+              <span className="block text-white/70 text-4xl md:text-5xl font-light mt-2">Pas de promesses.</span>
+            </h1>
+
+            <p className="text-xl text-slate-200 leading-relaxed mb-10 max-w-2xl">
+              ITERIUM PARTNERS connecte en quelques heures les entreprises avec les experts seniors
+              disponibles — DSI, RSSI, DAF, CTO — sans processus lourds ni marges excessives.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <Link href="/auth/login" className="inline-flex items-center gap-3 bg-[#F8B400] text-[#0A2942] px-8 py-4 rounded-2xl font-bold text-lg hover:bg-yellow-400 transition shadow-2xl">
+                Trouver un expert maintenant
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link href="/auth/login" className="inline-flex items-center gap-3 border-2 border-white/40 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/10 transition">
+                Accéder à mon espace
+              </Link>
+            </div>
+
+            {/* Badges de confiance */}
+            <div className="flex flex-wrap gap-6 mt-12 text-sm text-slate-300">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#F8B400]" />
+                Mise en relation sous 48h
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#F8B400]" />
+                Matching IA intelligent
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#F8B400]" />
+                Contrats générés automatiquement
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#F8B400]" />
+                0% commission sur les missions
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CHIFFRES CLÉS */}
+      <section className="bg-[#F8B400] py-12">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <p className="text-4xl font-extrabold text-[#0A2942]">48h</p>
+              <p className="text-sm font-semibold text-[#0A2942]/70 mt-1">Délai moyen de mise en relation</p>
+            </div>
+            <div>
+              <p className="text-4xl font-extrabold text-[#0A2942]">0%</p>
+              <p className="text-sm font-semibold text-[#0A2942]/70 mt-1">Commission sur vos missions</p>
+            </div>
+            <div>
+              <p className="text-4xl font-extrabold text-[#0A2942]">199€</p>
+              <p className="text-sm font-semibold text-[#0A2942]/70 mt-1">Abonnement mensuel fixe</p>
+            </div>
+            <div>
+              <p className="text-4xl font-extrabold text-[#0A2942]">100%</p>
+              <p className="text-sm font-semibold text-[#0A2942]/70 mt-1">Experts vérifiés & validés</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* POSITIONNEMENT */}
+      <section className="bg-white py-20 border-b">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-xl text-[#0A2942] font-semibold leading-relaxed mb-8">
+          <p className="text-2xl text-[#0A2942] font-bold leading-relaxed mb-8">
             ITERIUM PARTNERS réinvente l'accès à l'expertise senior.
           </p>
-
-          <p className="text-slate-600 text-lg leading-relaxed mb-6">
+          <p className="text-slate-600 text-lg leading-relaxed mb-8">
             Contrairement aux modèles traditionnels de recrutement, la plateforme permet une mise en relation
             directe entre entreprises et experts indépendants, sans processus lourds ni marges excessives.
           </p>
-
-          <div className="inline-block text-left bg-slate-50 rounded-2xl p-6 mb-6">
+          <div className="inline-block text-left bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100">
             <p className="text-xs font-bold text-[#F8B400] uppercase tracking-wide mb-2">Notre ADN</p>
             <p className="text-slate-600 leading-relaxed">
               Nous conjuguons exigence, indépendance et esprit entrepreneurial pour accompagner
               nos partenaires sur le long terme.
             </p>
           </div>
-
           <p className="text-slate-600 text-lg leading-relaxed">
             ITERIUM PARTNERS est une plateforme créée par des experts, pour des experts.
             Nous réinventons le business model du recrutement : 2026 marque un tournant dans ce domaine,
@@ -67,78 +157,49 @@ export default function HomePage() {
         </div>
       </section>
 
-     
-
-      {/* HERO */}
-      <section className="relative overflow-hidden bg-[#0A2942] text-white">
-        <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
-          <img src="/Logo.png" alt="" className="w-[900px] mx-auto mt-20" />
-        </div>
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-24 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/10 rounded-full px-4 py-2 text-sm mb-8">
-            <Sparkles className="w-4 h-4 text-[#F8B400]" />
-            Experts seniors disponibles rapidement
-          </div>
-          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight max-w-5xl mx-auto">
-            Accédez immédiatement aux meilleurs experts seniors pour vos projets critiques
-          </h1>
-          <p className="mt-8 text-xl text-slate-200 leading-relaxed max-w-4xl mx-auto">
-            DSI, CTO, RSSI, DAF, DRH, experts cybersécurité, cloud, conformité et transformation digitale
-            disponibles rapidement pour des missions stratégiques.
-          </p>
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
-            <Link href="/auth/login" className="inline-flex items-center gap-3 bg-[#F8B400] text-[#0A2942] px-8 py-4 rounded-2xl font-bold text-lg hover:bg-yellow-400 transition shadow-xl">
-              Trouver un expert maintenant
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link href="/auth/login" className="inline-flex items-center gap-3 border border-white/30 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/10 transition">
-              Accéder à mon espace
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
-          <div className="mt-14 flex flex-wrap justify-center gap-6 text-sm text-slate-300">
-            <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#F8B400]" />Mise en relation rapide</div>
-            <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#F8B400]" />Matching IA intelligent</div>
-            <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#F8B400]" />Contractualisation sécurisée</div>
-          </div>
-        </div>
-      </section>
-
       {/* COMMENT CA MARCHE */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-slate-50">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#0A2942]">Comment fonctionne ITERIUM PARTNERS ?</h2>
             <p className="text-slate-600 mt-4 text-lg">Une plateforme pensée pour connecter rapidement les entreprises avec les meilleurs experts disponibles.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white border rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
-              <div className="w-14 h-14 rounded-2xl bg-[#0A2942] text-white flex items-center justify-center mb-6">
-                <Search className="w-7 h-7" />
+            {[
+              {
+                icon: <Search className="w-7 h-7" />,
+                title: "Décrivez votre besoin",
+                desc: "Exprimez votre problématique métier, votre urgence ou vos besoins stratégiques en quelques mots.",
+                step: "01"
+              },
+              {
+                icon: <Sparkles className="w-7 h-7" />,
+                title: "L'IA identifie les experts",
+                desc: "Notre moteur IA sélectionne les profils les plus pertinents parmi nos experts vérifiés.",
+                step: "02"
+              },
+              {
+                icon: <Shield className="w-7 h-7" />,
+                title: "Mise en relation sécurisée",
+                desc: "Contractualisation automatique, conformité RGPD et accès aux coordonnées après validation.",
+                step: "03"
+              }
+            ].map((item, i) => (
+              <div key={i} className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition relative overflow-hidden">
+                <div className="absolute top-4 right-6 text-6xl font-black text-slate-100">{item.step}</div>
+                <div className="w-14 h-14 rounded-2xl bg-[#0A2942] text-white flex items-center justify-center mb-6 relative z-10">
+                  {item.icon}
+                </div>
+                <h3 className="text-xl font-bold text-[#0A2942] mb-4 relative z-10">{item.title}</h3>
+                <p className="text-slate-600 leading-relaxed relative z-10">{item.desc}</p>
               </div>
-              <h3 className="text-2xl font-bold text-[#0A2942] mb-4">Décrivez votre besoin</h3>
-              <p className="text-slate-600 leading-relaxed">Exprimez votre problématique métier, votre urgence ou vos besoins stratégiques.</p>
-            </div>
-            <div className="bg-white border rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
-              <div className="w-14 h-14 rounded-2xl bg-[#0A2942] text-white flex items-center justify-center mb-6">
-                <Sparkles className="w-7 h-7" />
-              </div>
-              <h3 className="text-2xl font-bold text-[#0A2942] mb-4">L'IA identifie les experts</h3>
-              <p className="text-slate-600 leading-relaxed">Notre moteur IA sélectionne les profils les plus pertinents selon votre besoin.</p>
-            </div>
-            <div className="bg-white border rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
-              <div className="w-14 h-14 rounded-2xl bg-[#0A2942] text-white flex items-center justify-center mb-6">
-                <Shield className="w-7 h-7" />
-              </div>
-              <h3 className="text-2xl font-bold text-[#0A2942] mb-4">Mise en relation sécurisée</h3>
-              <p className="text-slate-600 leading-relaxed">Contractualisation, conformité RGPD, paiement sécurisé et accès aux coordonnées après validation.</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* EXPERTISES */}
-      <section className="bg-slate-50 py-24">
+      <section className="bg-white py-24">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#0A2942]">Expertises disponibles</h2>
@@ -146,8 +207,8 @@ export default function HomePage() {
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {["DSI / CTO", "RSSI / Cybersécurité", "Cloud & Infrastructure", "SAP / ERP", "DAF de transition", "Transformation digitale", "Conformité NIS2", "Direction de programme", "RH & organisation"].map((item, index) => (
-              <div key={index} className="bg-white border rounded-2xl p-6 flex items-center gap-4 shadow-sm">
-                <div className="w-11 h-11 rounded-xl bg-[#0A2942] text-white flex items-center justify-center">
+              <div key={index} className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex items-center gap-4 hover:border-[#F8B400] hover:shadow-md transition">
+                <div className="w-11 h-11 rounded-xl bg-[#0A2942] text-white flex items-center justify-center shrink-0">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div className="font-semibold text-[#0A2942]">{item}</div>
@@ -158,15 +219,14 @@ export default function HomePage() {
       </section>
 
       {/* OFFRES */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-slate-50">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#0A2942]">Offres & accès plateforme</h2>
             <p className="text-slate-600 mt-4 text-lg">Deux formules adaptées aux besoins des PME, ETI et grands groupes.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-8">
-
-            <div className="border rounded-3xl p-10 shadow-sm bg-white">
+            <div className="border rounded-3xl p-10 shadow-sm bg-white hover:shadow-lg transition">
               <h3 className="text-2xl font-bold text-[#0A2942] mb-2">Forfait Essentiel</h3>
               <p className="text-slate-500 text-sm mb-6">Idéal pour les PME avec des besoins ponctuels en expertise senior.</p>
               <div className="mb-2">
@@ -186,18 +246,18 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <div className="border-2 border-[#F8B400] rounded-3xl p-10 shadow-xl bg-white relative overflow-hidden">
+            <div className="border-2 border-[#F8B400] rounded-3xl p-10 shadow-xl bg-[#0A2942] relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-[#F8B400] text-[#0A2942] px-5 py-2 text-sm font-bold rounded-bl-2xl">
                 PREMIUM
               </div>
-              <h3 className="text-2xl font-bold text-[#0A2942] mb-2">Forfait Groupe</h3>
-              <p className="text-slate-500 text-sm mb-6">Pour les ETI et grands groupes avec des besoins multiples et récurrents.</p>
+              <h3 className="text-2xl font-bold text-white mb-2">Forfait Groupe</h3>
+              <p className="text-slate-300 text-sm mb-6">Pour les ETI et grands groupes avec des besoins multiples et récurrents.</p>
               <div className="mb-2">
                 <span className="text-5xl font-bold text-[#F8B400]">490€</span>
-                <span className="text-lg text-slate-500 font-medium"> /mois</span>
+                <span className="text-lg text-slate-400 font-medium"> /mois</span>
               </div>
-              <p className="text-sm text-slate-400 mb-8">ou <strong>4 900€/an</strong> (2 mois offerts)</p>
-              <ul className="space-y-3 text-slate-700 mb-8">
+              <p className="text-sm text-slate-400 mb-8">ou <strong className="text-white">4 900€/an</strong> (2 mois offerts)</p>
+              <ul className="space-y-3 text-slate-300 mb-8">
                 <li className="flex gap-3"><CheckCircle2 className="w-5 h-5 text-[#F8B400] shrink-0" />Tout le forfait Essentiel</li>
                 <li className="flex gap-3"><CheckCircle2 className="w-5 h-5 text-[#F8B400] shrink-0" />Mises en relation illimitées</li>
                 <li className="flex gap-3"><CheckCircle2 className="w-5 h-5 text-[#F8B400] shrink-0" />Multi-utilisateurs</li>
@@ -209,19 +269,19 @@ export default function HomePage() {
                 Commencer maintenant
               </Link>
             </div>
-
           </div>
         </div>
       </section>
- {/* COMPARATIF */}
-      <section className="bg-slate-50 py-16 border-b">
+
+      {/* COMPARATIF */}
+      <section className="bg-white py-16 border-b">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-[#0A2942]">Pourquoi choisir ITERIUM PARTNERS ?</h2>
             <p className="text-slate-600 mt-3">Comparez et faites le calcul vous-même.</p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm bg-white rounded-2xl shadow overflow-hidden">
+          <div className="overflow-x-auto rounded-2xl shadow">
+            <table className="w-full text-sm bg-white overflow-hidden">
               <thead>
                 <tr className="bg-[#0A2942] text-white">
                   <th className="px-6 py-4 text-left"></th>
@@ -231,42 +291,21 @@ export default function HomePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                <tr>
-                  <td className="px-6 py-4 font-semibold text-slate-700">Coût</td>
-                  <td className="px-6 py-4 text-center text-red-600 font-semibold">15-25% du salaire annuel</td>
-                  <td className="px-6 py-4 text-center text-orange-500 font-semibold">10-15% par mission</td>
-                  <td className="px-6 py-4 text-center text-emerald-600 font-bold">199€/mois fixe</td>
-                </tr>
-                <tr className="bg-slate-50">
-                  <td className="px-6 py-4 font-semibold text-slate-700">Accès aux experts</td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center text-slate-500">1 freelance à la fois</td>
-                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Illimité</span></td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 font-semibold text-slate-700">Délai de mise en relation</td>
-                  <td className="px-6 py-4 text-center text-red-500">4 à 8 semaines</td>
-                  <td className="px-6 py-4 text-center text-orange-500">Variable</td>
-                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Immédiat</span></td>
-                </tr>
-                <tr className="bg-slate-50">
-                  <td className="px-6 py-4 font-semibold text-slate-700">Contrat automatique</td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Oui</span></td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 font-semibold text-slate-700">Multi-experts simultanés</td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Oui</span></td>
-                </tr>
-                <tr className="bg-slate-50">
-                  <td className="px-6 py-4 font-semibold text-slate-700">Missions urgentes</td>
-                  <td className="px-6 py-4 text-center"><X className="w-5 h-5 text-red-500 mx-auto" /></td>
-                  <td className="px-6 py-4 text-center text-orange-500">Difficile</td>
-                  <td className="px-6 py-4 text-center"><span className="text-emerald-600 font-bold">✅ Express</span></td>
-                </tr>
+                {[
+                  { label: "Coût", val1: "15-25% du salaire annuel", val2: "10-15% par mission", val3: "199€/mois fixe", c1: "text-red-600", c2: "text-orange-500", c3: "text-emerald-600" },
+                  { label: "Accès aux experts", val1: "—", val2: "1 freelance à la fois", val3: "✅ Illimité", c1: "text-red-500", c2: "text-slate-500", c3: "text-emerald-600 font-bold" },
+                  { label: "Délai de mise en relation", val1: "4 à 8 semaines", val2: "Variable", val3: "✅ 48h", c1: "text-red-500", c2: "text-orange-500", c3: "text-emerald-600 font-bold" },
+                  { label: "Contrat automatique", val1: "❌", val2: "❌", val3: "✅ Oui", c1: "", c2: "", c3: "text-emerald-600 font-bold" },
+                  { label: "Multi-experts simultanés", val1: "❌", val2: "❌", val3: "✅ Oui", c1: "", c2: "", c3: "text-emerald-600 font-bold" },
+                  { label: "Missions urgentes", val1: "❌", val2: "Difficile", val3: "✅ Express", c1: "", c2: "text-orange-500", c3: "text-emerald-600 font-bold" },
+                ].map((row, i) => (
+                  <tr key={i} className={i % 2 === 1 ? "bg-slate-50" : ""}>
+                    <td className="px-6 py-4 font-semibold text-slate-700">{row.label}</td>
+                    <td className={`px-6 py-4 text-center ${row.c1}`}>{row.val1}</td>
+                    <td className={`px-6 py-4 text-center ${row.c2}`}>{row.val2}</td>
+                    <td className={`px-6 py-4 text-center ${row.c3}`}>{row.val3}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -277,17 +316,23 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      
-      {/* CTA FINAL */}
-      <section className="bg-[#0A2942] text-white py-24">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <Users className="w-14 h-14 text-[#F8B400] mx-auto mb-6" />
-          <h2 className="text-4xl font-bold mb-6">Vous êtes un expert senior ?</h2>
+
+      {/* CTA EXPERT */}
+      <section className="bg-[#0A2942] text-white py-24 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5 pointer-events-none">
+          <img src="/Logo.png" alt="" className="w-[600px] mx-auto mt-10" />
+        </div>
+        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+          <Award className="w-14 h-14 text-[#F8B400] mx-auto mb-6" />
+          <h2 className="text-4xl font-bold mb-4">Vous êtes un expert senior ?</h2>
+          <p className="text-[#F8B400] text-xl font-semibold mb-6">
+            "Les dirigeants ont besoin d'expérience. Pas de promesses."
+          </p>
           <p className="text-slate-300 text-lg leading-relaxed mb-10">
             Rejoignez le réseau ITERIUM PARTNERS et accédez à des missions stratégiques
-            auprès de PME, ETI et grands groupes. Inscription gratuite.
+            auprès de PME, ETI et grands groupes. Inscription gratuite, profil validé par nos équipes.
           </p>
-          <Link href="/expert" className="inline-flex items-center gap-3 bg-[#F8B400] text-[#0A2942] px-8 py-4 rounded-2xl font-bold hover:bg-yellow-400 transition">
+          <Link href="/expert" className="inline-flex items-center gap-3 bg-[#F8B400] text-[#0A2942] px-8 py-4 rounded-2xl font-bold text-lg hover:bg-yellow-400 transition shadow-xl">
             Rejoindre le réseau expert
             <ArrowRight className="w-5 h-5" />
           </Link>
@@ -297,7 +342,10 @@ export default function HomePage() {
       {/* FOOTER */}
       <footer className="border-t bg-white">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-          <div>© 2026 ITERIUM PARTNERS — Plateforme IA B2B</div>
+          <div className="flex items-center gap-3">
+            <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-8 w-auto" />
+            <span>© 2026 ITERIUM PARTNERS — Plateforme IA B2B</span>
+          </div>
           <div className="flex items-center gap-5">
             <Link href="/legal" className="hover:text-[#0A2942] transition">Mentions légales</Link>
             <Link href="/privacy" className="hover:text-[#0A2942] transition">Politique RGPD</Link>
