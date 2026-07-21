@@ -70,7 +70,7 @@ export default function HomePage() {
 
             <p className="text-xl text-slate-200 leading-relaxed mb-10 max-w-2xl">
               ITERIUM PARTNERS connecte en quelques heures les entreprises avec les experts seniors
-              disponibles DSI, RSSI, DAF, CTO sans processus lourds ni marges excessives.
+              disponibles DG, DSI, RSSI, DAF, CTO sans processus lourds ni marges.
             </p>
 
             <div className="flex flex-wrap gap-4">
