@@ -25,14 +25,17 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    // ✅ Déconnecter d'abord toute session active
+    await supabase.auth.signOut();
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://iteriumpartners.com/auth/callback?type=recovery",
+      redirectTo: "https://iteriumpartners.com/auth/update-password",
     });
 
     if (error) {
-      setError("Erreur lors de l'envoi. Vérifiez votre email.");
+      setError("Email introuvable ou erreur. Vérifiez votre adresse email.");
     } else {
-      setSuccess("✅ Email envoyé ! Vérifiez votre boîte mail et cliquez sur le lien.");
+      setSuccess("✅ Email envoyé ! Vérifiez votre boîte mail et cliquez sur le lien de réinitialisation.");
     }
 
     setLoading(false);
@@ -68,7 +71,7 @@ export default function ResetPasswordPage() {
 
           <button onClick={handleReset} disabled={loading}
             className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50">
-            {loading ? "Envoi en cours..." : "Envoyer le lien"}
+            {loading ? "Envoi en cours..." : "Envoyer le lien de réinitialisation"}
           </button>
 
           <div className="text-center">
