@@ -97,12 +97,13 @@ export default function UpdatePasswordPage() {
         ) : (
           <div className="space-y-4">
             <input type="password" placeholder="Nouveau mot de passe *"
-              value={password} onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
-            <input type="password" placeholder="Confirmer le mot de passe *"
-              value={confirm} onChange={(e) => setConfirm(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleUpdate()}
-              className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+  value={password} onChange={(e) => setPassword(e.target.value)}
+  className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400" />
+
+<input type="password" placeholder="Confirmer le mot de passe *"
+  value={confirm} onChange={(e) => setConfirm(e.target.value)}
+  onKeyDown={(e) => e.key === "Enter" && handleUpdate()}
+  className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400" />
             <p className="text-xs text-slate-400">Minimum 8 caractères.</p>
 
             {error && (
