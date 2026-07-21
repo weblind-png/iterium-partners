@@ -58,7 +58,7 @@ export default function HomePage() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-[#F8B400]/20 border border-[#F8B400]/40 rounded-full px-4 py-2 text-sm text-[#F8B400] mb-8">
               <Sparkles className="w-4 h-4" />
-              Plateforme IA B2B de mise en relation · Lancée en 2026
+              Plateforme IA B2B de mise en relation
             </div>
 
             {/* Slogan principal */}
