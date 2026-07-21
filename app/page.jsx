@@ -63,7 +63,7 @@ export default function HomePage() {
 
             {/* Slogan principal */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight mb-6">
-              Les dirigeants ont besoin d'expérience
+              Les dirigeants ont besoin d'expérience</span>
             <span className="block text-[#F8B400]">Pas de promesses.</span>
             </h1>
 
