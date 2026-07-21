@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 
@@ -16,6 +16,26 @@ export default function UpdatePasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    // ✅ Écouter l'événement PASSWORD_RECOVERY de Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setReady(true);
+      }
+      if (event === "SIGNED_IN" && session) {
+        setReady(true);
+      }
+    });
+
+    // ✅ Vérifier aussi si une session est déjà active (cas redirection directe)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleUpdate = async () => {
     setLoading(true);
@@ -27,13 +47,11 @@ export default function UpdatePasswordPage() {
       setLoading(false);
       return;
     }
-
     if (password.length < 8) {
       setError("Le mot de passe doit contenir au moins 8 caractères.");
       setLoading(false);
       return;
     }
-
     if (password !== confirm) {
       setError("Les deux mots de passe ne correspondent pas.");
       setLoading(false);
@@ -43,7 +61,7 @@ export default function UpdatePasswordPage() {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      setError("Session expirée. Veuillez refaire une demande de réinitialisation.");
+      setError("Lien expiré. Veuillez refaire une demande de réinitialisation.");
     } else {
       setSuccess("✅ Mot de passe mis à jour avec succès !");
       await supabase.auth.signOut();
@@ -56,49 +74,64 @@ export default function UpdatePasswordPage() {
   return (
     <div className="min-h-screen bg-[#0A2942] flex items-center justify-center px-4">
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
-
         <div className="text-center mb-8">
           <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-12 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-[#0A2942]">Nouveau mot de passe</h1>
           <p className="text-slate-500 text-sm mt-1">Choisissez un nouveau mot de passe sécurisé</p>
         </div>
 
-        <div className="space-y-4">
-          <input type="password" placeholder="Nouveau mot de passe *"
-            value={password} onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
-          <input type="password" placeholder="Confirmer le mot de passe *"
-            value={confirm} onChange={(e) => setConfirm(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleUpdate()}
-            className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
-          <p className="text-xs text-slate-400">Minimum 8 caractères.</p>
-
-          {error && (
-            <div className="space-y-3">
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{error}</div>
-              <a href="/auth/reset-password"
-                className="block w-full text-center bg-slate-100 text-slate-700 font-bold py-2 rounded-xl hover:bg-slate-200 transition text-sm">
-                Refaire une demande
+        {!ready ? (
+          <div className="text-center space-y-4 py-4">
+            <p className="text-slate-500 text-sm">⏳ Vérification du lien en cours...</p>
+            <p className="text-xs text-slate-400">Si cette page reste bloquée, votre lien a peut-être expiré.</p>
+            <a href="/auth/reset-password"
+              className="block w-full text-center bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition text-sm">
+              Refaire une demande
+            </a>
+            <div className="text-center">
+              <a href="/auth/login" className="text-xs text-slate-500 hover:text-[#0A2942]">
+                ← Retour à la connexion
               </a>
             </div>
-          )}
-          {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-3">
-              {success} Redirection en cours...
-            </div>
-          )}
-
-          <button onClick={handleUpdate} disabled={loading}
-            className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50">
-            {loading ? "Mise à jour..." : "Mettre à jour mon mot de passe"}
-          </button>
-
-          <div className="text-center">
-            <a href="/auth/login" className="text-xs text-slate-500 hover:text-[#0A2942]">
-              ← Retour à la connexion
-            </a>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-4">
+            <input type="password" placeholder="Nouveau mot de passe *"
+              value={password} onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+            <input type="password" placeholder="Confirmer le mot de passe *"
+              value={confirm} onChange={(e) => setConfirm(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleUpdate()}
+              className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+            <p className="text-xs text-slate-400">Minimum 8 caractères.</p>
+
+            {error && (
+              <div className="space-y-3">
+                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{error}</div>
+                <a href="/auth/reset-password"
+                  className="block w-full text-center bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-sm">
+                  Refaire une demande
+                </a>
+              </div>
+            )}
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-3">
+                {success} Redirection vers la connexion...
+              </div>
+            )}
+
+            <button onClick={handleUpdate} disabled={loading}
+              className="w-full bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-2xl hover:bg-yellow-400 transition disabled:opacity-50">
+              {loading ? "Mise à jour..." : "Mettre à jour mon mot de passe"}
+            </button>
+
+            <div className="text-center">
+              <a href="/auth/login" className="text-xs text-slate-500 hover:text-[#0A2942]">
+                ← Retour à la connexion
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
