@@ -127,7 +127,7 @@ export default function HomePage() {
     <p className="text-[#C9A84C] font-semibold italic">
       "Parce que l'expérience ne se résume pas à un CV ou des cases."
     </p>
-  </div>
+  
 </div>
           <p className="text-slate-600 text-lg leading-relaxed">
             ITERIUM PARTNERS est une plateforme créée par des experts, pour des experts.
