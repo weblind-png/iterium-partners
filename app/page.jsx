@@ -119,8 +119,7 @@ export default function HomePage() {
             <p className="text-slate-600 leading-relaxed">
              "Chez ITERIUM PARTNERS, nous ne sélectionnons pas des profils. Nous réunissons des femmes et des hommes qui ont déjà dirigé, décidé et transformé. Nous conjuguons exigence, indépendance et esprit entrepreneurial pour accompagner
               nos partenaires sur le long terme."
-              Conçu par des dirigeants. Pensé pour les entreprises. Porté par des experts.
-              "Parce que l'expérience ne se résume pas à un CV."
+              "Parce que l'expérience ne se résume pas à un CV ou des cases."
             </p>
           </div>
           <p className="text-slate-600 text-lg leading-relaxed">
