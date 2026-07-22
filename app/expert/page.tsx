@@ -226,12 +226,9 @@ export default function ExpertPage() {
               value={form.linkedin} onChange={handleChange}
               className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <select name="localisation" value={form.localisation} onChange={handleChange} required
-                className="w-full border border-slate-300 rounded-xl p-4 bg-white text-slate-800 appearance-none cursor-pointer">
-                <option value="" disabled>Région principale de résidence</option>
-                 <option value="Provence-Alpes-Côte d'Azur">Provence-Alpes-Côte d'Azur</option>
-                </optgroup>
+            <input type="text" name="metier" placeholder="Fonction (DSI, CTO, DAF, RSSI...) *"
+              value={form.metier} onChange={handleChange} required
+              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
 
             <textarea name="experience" placeholder="Résumé de votre parcours et expériences *"
               rows={4} value={form.experience} onChange={handleChange} required
