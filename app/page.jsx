@@ -128,7 +128,7 @@ export default function HomePage() {
     </p>
   </div>
 </div>
-            </p>
+          
           </div>
           <p className="text-slate-600 text-lg leading-relaxed">
             ITERIUM PARTNERS est une plateforme créée par des experts, pour des experts.
