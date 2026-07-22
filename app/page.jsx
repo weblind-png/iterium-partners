@@ -114,12 +114,20 @@ export default function HomePage() {
             Contrairement aux modèles traditionnels de recrutement, la plateforme permet une mise en relation
             directe entre entreprises et experts indépendants, sans processus lourds ni marges excessives.
           </p>
-          <div className="inline-block text-left bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100">
-            <p className="text-xs font-bold text-[#F8B400] uppercase tracking-wide mb-2">Notre ADN</p>
-            <p className="text-slate-600 leading-relaxed">
-             "Chez ITERIUM PARTNERS, nous ne sélectionnons pas des profils. Nous réunissons des femmes et des hommes qui ont déjà dirigé, décidé et transformé. Nous conjuguons exigence, indépendance et esprit entrepreneurial pour accompagner
-              nos partenaires sur le long terme."
-              "Parce que l'expérience ne se résume pas à un CV ou des cases."
+          <div className="bg-[#0A2942] rounded-2xl p-8 mb-8 text-left">
+  <p className="text-xs font-bold text-[#C9A84C] uppercase tracking-widest mb-4">Notre ADN</p>
+  <p className="text-white text-lg font-semibold leading-relaxed mb-4">
+    "Chez ITERIUM PARTNERS, nous ne sélectionnons pas des profils.
+  </p>
+  <p className="text-slate-300 leading-relaxed mb-4">
+    Nous réunissons des femmes et des hommes qui ont déjà <strong className="text-white">dirigé, décidé et transformé.</strong> Nous conjuguons exigence, indépendance et esprit entrepreneurial pour accompagner nos partenaires sur le long terme."
+  </p>
+  <div className="border-t border-white/20 pt-4 mt-4">
+    <p className="text-[#C9A84C] font-semibold italic">
+      "Parce que l'expérience ne se résume pas à un CV ou des cases."
+    </p>
+  </div>
+</div>
             </p>
           </div>
           <p className="text-slate-600 text-lg leading-relaxed">
