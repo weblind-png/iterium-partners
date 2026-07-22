@@ -161,7 +161,7 @@ export default function ConditionsGeneralesPage() {
           Chaque utilisateur dispose d'un droit d'accès, de rectification et de
           suppression de ses données via l'adresse{" "}
           <a
-            href="mailto:contact@itriumconseil.fr"
+            href="mailto:contact@itriumconseil.com"
             className="text-[#00AEEF] underline"
           >
             contact@itriumconseil.fr
@@ -204,10 +204,10 @@ export default function ConditionsGeneralesPage() {
           Tout utilisateur peut demander la suppression de son compte et de ses
           données personnelles à tout moment en envoyant une demande à{" "}
           <a
-            href="mailto:contact@itriumconseil.fr"
+            href="mailto:ccontact@itriumconseil.com"
             className="text-[#00AEEF] underline"
           >
-            contact@itriumconseil.fr
+            contact@itriumconseil.com
           </a>.
           Les données seront supprimées dans un délai de 30 jours suivant la
           demande, sous réserve des obligations légales de conservation.
@@ -224,7 +224,7 @@ export default function ConditionsGeneralesPage() {
         <p>
           Les présentes conditions sont régies par le droit français. Tout litige
           relatif à leur interprétation ou leur exécution relève de la compétence
-          exclusive des tribunaux de Paris.
+          exclusive des tribunaux de Beauvais.
         </p>
  
         <p className="text-center text-sm text-gray-500 mt-16">
