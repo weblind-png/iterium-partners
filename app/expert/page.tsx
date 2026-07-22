@@ -230,6 +230,8 @@ export default function ExpertPage() {
               <select name="localisation" value={form.localisation} onChange={handleChange} required
                 className="w-full border border-slate-300 rounded-xl p-4 bg-white text-slate-800 appearance-none cursor-pointer">
                 <option value="" disabled>Région principale de résidence</option>
+                 <option value="Provence-Alpes-Côte d'Azur">Provence-Alpes-Côte d'Azur</option>
+                </optgroup>
 
             <textarea name="experience" placeholder="Résumé de votre parcours et expériences *"
               rows={4} value={form.experience} onChange={handleChange} required
