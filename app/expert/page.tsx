@@ -176,7 +176,7 @@ export default function ExpertPage() {
 
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">
-            Rejoindre le réseau d'experts ITERIUM PARTNERS
+            Rejoindre le Cercle ITERIUM PARTNERS
           </h1>
           <p className="text-slate-300 text-lg leading-relaxed">
             ITERIUM PARTNERS met en relation des PME, ETI et grands groupes
