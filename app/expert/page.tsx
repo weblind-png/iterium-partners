@@ -226,9 +226,27 @@ export default function ExpertPage() {
               value={form.linkedin} onChange={handleChange}
               className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
 
-            <input type="text" name="metier" placeholder="Fonction (DSI, CTO, DAF, RSSI...) *"
-              value={form.metier} onChange={handleChange} required
-              className="w-full border border-slate-300 rounded-xl p-4 text-slate-800 placeholder-slate-400" />
+            <select name="metier" value={form.metier} onChange={handleChange} required
+  className="w-full border border-slate-300 rounded-xl p-4 bg-white text-slate-800">
+  <option value="">Sélectionnez votre fonction *</option>
+  <option>Directeur Général (DG)</option>
+  <option>Directeur des Systèmes d'Information (DSI)</option>
+  <option>Directeur Technique (CTO)</option>
+  <option>Directeur Financier (DAF/CFO)</option>
+  <option>Directeur des Ressources Humaines (DRH)</option>
+  <option>Directeur Commercial (DCO)</option>
+  <option>Directeur Marketing (CMO)</option>
+  <option>Directeur des Opérations (COO)</option>
+  <option>Responsable Sécurité des SI (RSSI/CISO)</option>
+  <option>Directeur de Projet / Programme</option>
+  <option>Directeur Transformation Digitale</option>
+  <option>Directeur Conformité & Risques</option>
+  <option>Expert Cybersécurité</option>
+  <option>Expert Cloud & Infrastructure</option>
+  <option>Expert ERP / SAP</option>
+  <option>Expert Data & IA</option>
+  <option>Autre direction</option>
+</select>
 
             <textarea name="experience" placeholder="Résumé de votre parcours et expériences *"
               rows={4} value={form.experience} onChange={handleChange} required
