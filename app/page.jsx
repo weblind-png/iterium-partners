@@ -104,30 +104,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CHIFFRES CLÉS */}
-      <section className="bg-[#F8B400] py-12">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <p className="text-4xl font-extrabold text-[#0A2942]">24h</p>
-              <p className="text-sm font-semibold text-[#0A2942]/70 mt-1">Délai moyen de mise en relation</p>
-            </div>
-            <div>
-              <p className="text-4xl font-extrabold text-[#0A2942]">0%</p>
-              <p className="text-sm font-semibold text-[#0A2942]/70 mt-1">Commission sur vos missions</p>
-            </div>
-            <div>
-              <p className="text-4xl font-extrabold text-[#0A2942]">199€</p>
-              <p className="text-sm font-semibold text-[#0A2942]/70 mt-1">Abonnement mensuel fixe</p>
-            </div>
-            <div>
-              <p className="text-4xl font-extrabold text-[#0A2942]">100%</p>
-              <p className="text-sm font-semibold text-[#0A2942]/70 mt-1">Experts vérifiés & validés</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* POSITIONNEMENT */}
       <section className="bg-white py-20 border-b">
         <div className="max-w-4xl mx-auto px-6 text-center">
