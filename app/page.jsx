@@ -63,10 +63,9 @@ export default function HomePage() {
 
             {/* Slogan principal */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight mb-6">
-              Les dirigeants ont besoin d'expérience
-            <span className="block text-[#F8B400]">Pas de promesses.</span>
-            </h1>
-
+  Les dirigeants ont besoin d'expérience.
+  <span className="block text-[#C9A84C] font-light mt-2">Pas de promesses.</span>
+</h1>
             <p className="text-xl text-slate-200 leading-relaxed mb-10 max-w-2xl">
               ITERIUM PARTNERS connecte en quelques heures les entreprises avec les experts seniors
               disponibles DG, DSI, RSSI, DAF, CTO sans processus lourds ni marges.
