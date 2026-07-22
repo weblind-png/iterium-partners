@@ -324,8 +324,7 @@ export default function HomePage() {
             <Link href="/legal" className="hover:text-[#0A2942] transition">Mentions légales</Link>
             <Link href="/privacy" className="hover:text-[#0A2942] transition">Politique RGPD</Link>
             <Link href="/legal/conditions" className="hover:text-[#0A2942] transition">CGU</Link>
-            <Link href="/auth/login" className="font-semibold text-[#0A2942] hover:text-[#F8B400] transition">Se connecter</Link>
-          </div>
+           </div>
         </div>
       </footer>
 
