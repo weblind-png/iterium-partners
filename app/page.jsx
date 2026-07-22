@@ -117,8 +117,10 @@ export default function HomePage() {
           <div className="inline-block text-left bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100">
             <p className="text-xs font-bold text-[#F8B400] uppercase tracking-wide mb-2">Notre ADN</p>
             <p className="text-slate-600 leading-relaxed">
-              Nous conjuguons exigence, indépendance et esprit entrepreneurial pour accompagner
-              nos partenaires sur le long terme.
+             "Chez ITERIUM PARTNERS, nous ne sélectionnons pas des profils. Nous réunissons des femmes et des hommes qui ont déjà dirigé, décidé et transformé. Nous conjuguons exigence, indépendance et esprit entrepreneurial pour accompagner
+              nos partenaires sur le long terme."
+              Conçu par des dirigeants. Pensé pour les entreprises. Porté par des experts.
+              "Parce que l'expérience ne se résume pas à un CV."
             </p>
           </div>
           <p className="text-slate-600 text-lg leading-relaxed">
