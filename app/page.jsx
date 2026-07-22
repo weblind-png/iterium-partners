@@ -339,9 +339,9 @@ Votre référencement est entièrement gratuit.
             <span>© 2026 ITERIUM PARTNERS — Plateforme IA B2B</span>
           </div>
           <div className="flex items-center gap-5">
-            <Link href="/legal" className="hover:text-[#0A2942] transition">Mentions légales</Link>
+            <Link href="/legal/mentions">Mentions légales</Link>
             <Link href="/privacy" className="hover:text-[#0A2942] transition">Politique RGPD</Link>
-            <Link href="/legal/conditions" className="hover:text-[#0A2942] transition">CGU</Link>
+            <Link href="/legal/conditions-generales">CGU</Link>
            </div>
         </div>
       </footer>
