@@ -304,8 +304,43 @@ export default function HomePage() {
             "Les dirigeants ont besoin d'expérience. Pas de promesses."
           </p>
           <p className="text-slate-300 text-lg leading-relaxed mb-10">
-            Rejoignez le réseau ITERIUM PARTNERS et accédez à des missions stratégiques
-            auprès de PME, ETI et grands groupes. Inscription gratuite, profil validé par nos équipes.
+            Rejoindre le Cercle ITERIUM PARTNERS
+
+ITERIUM PARTNERS n'est pas une plateforme de recrutement.
+
+C'est un réseau d'experts imaginé par des dirigeants et des managers de terrain, pour répondre aux véritables enjeux des entreprises.
+
+Nous connaissons les réalités d'une transformation, l'urgence d'une mission stratégique, la difficulté de trouver rapidement la bonne expertise. Parce que nous l'avons vécu.
+
+C'est pourquoi nous avons créé un espace où l'expérience, le leadership et la capacité à délivrer comptent davantage qu'un simple CV.
+
+En rejoignant le Cercle ITERIUM PARTNERS, vous intégrez une communauté de dirigeants, managers de transition et experts reconnus, référencés pour la valeur de leur parcours et leur capacité à accompagner les entreprises dans leurs décisions les plus stratégiques.
+
+Votre référencement est entièrement gratuit.
+
+Notre mission est simple : permettre aux entreprises d'accéder rapidement à des experts de confiance, tout en offrant à ces derniers une visibilité à la hauteur de leur expérience.
+
+ITERIUM PARTNERS n'est pas un site d'emploi.
+
+C'est un réseau construit par des professionnels qui parlent le même langage que les entreprises qu'ils accompagnent.Rejoindre le Cercle ITERIUM PARTNERS
+
+ITERIUM PARTNERS n'est pas une plateforme de recrutement.
+
+C'est un réseau d'experts imaginé par des dirigeants et des managers de terrain, pour répondre aux véritables enjeux des entreprises.
+
+Nous connaissons les réalités d'une transformation, l'urgence d'une mission stratégique, la difficulté de trouver rapidement la bonne expertise. Parce que nous l'avons vécu.
+
+C'est pourquoi nous avons créé un espace où l'expérience, le leadership et la capacité à délivrer comptent davantage qu'un simple CV.
+
+En rejoignant le Cercle ITERIUM PARTNERS, vous intégrez une communauté de dirigeants, managers de transition et experts reconnus, référencés pour la valeur de leur parcours et leur capacité à accompagner les entreprises dans leurs décisions les plus stratégiques.
+
+Votre référencement est entièrement gratuit.
+
+Notre mission est simple : permettre aux entreprises d'accéder rapidement à des experts de confiance, tout en offrant à ces derniers une visibilité à la hauteur de leur expérience.
+
+ITERIUM PARTNERS n'est pas un site d'emploi.
+
+C'est un réseau construit par des professionnels qui parlent le même langage que les entreprises qu'ils accompagnent.
           </p>
           <Link href="/expert" className="inline-flex items-center gap-3 bg-[#F8B400] text-[#0A2942] px-8 py-4 rounded-2xl font-bold text-lg hover:bg-yellow-400 transition shadow-xl">
             Rejoindre le réseau expert
