@@ -180,7 +180,7 @@ export default function HomePage() {
             <p className="text-slate-600 mt-4 text-lg">Des profils seniors immédiatement mobilisables sur des missions stratégiques et sensibles.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {["DSI / CTO", "RSSI / Cybersécurité", "Direction Générale", "Direction Opérationnelle", "DAF de transition", "Transformation digitale", "Conformité NIS2", "Direction de programme", "RH & organisation"].map((item, index) => (
+            {["DSI / CTO", "RSSI / Cybersécurité", "Direction Générale", "Direction Opérationnelle", "DAF de transition", "Transformation digitale", "Conformité/ Compliance", "Direction de programme", "RH & organisation"].map((item, index) => (
               <div key={index} className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex items-center gap-4 hover:border-[#F8B400] hover:shadow-md transition">
                 <div className="w-11 h-11 rounded-xl bg-[#0A2942] text-white flex items-center justify-center shrink-0">
                   <Briefcase className="w-5 h-5" />
