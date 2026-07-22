@@ -118,9 +118,9 @@ export default function ConditionsGeneralesPage() {
           le Client et l'Expert.
         </p>
         <p>
-          ITERIUM PARTNERS perçoit une commission sur les transactions réalisées
-          via la plateforme, dont le détail est précisé lors de la souscription
-          à l'abonnement choisi.
+          ITERIUM PARTNERS perçoit un abonnement mensuel fixe dont le montant 
+          est précisé lors de la souscription. Aucune commission n'est prélevée 
+          sur les transactions entre Client et Expert.
         </p>
         <p>
           Les abonnements sont sans engagement sauf mention contraire au moment
