@@ -31,7 +31,7 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-3">
             <Link href="/expert" className="border border-white/20 px-5 py-2 rounded-xl text-sm font-medium hover:bg-white/10 transition hidden md:block">
-              Rejoindre le réseau expert
+              Rejoindre le Cercle ITERIUM PARTNERS
             </Link>
             <Link href="/auth/login" className="bg-[#F8B400] text-[#0A2942] px-5 py-2 rounded-xl text-sm font-bold hover:bg-yellow-400 transition">
               Se connecter
