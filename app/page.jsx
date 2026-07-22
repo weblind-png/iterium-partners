@@ -115,6 +115,7 @@ export default function HomePage() {
             directe entre entreprises et experts indépendants, sans processus lourds ni marges excessives.
           </p>
           <div className="bg-[#0A2942] rounded-2xl p-8 mb-8 text-left">
+ <div className="bg-[#0A2942] rounded-2xl p-8 mb-8 text-left">
   <p className="text-xs font-bold text-[#C9A84C] uppercase tracking-widest mb-4">Notre ADN</p>
   <p className="text-white text-lg font-semibold leading-relaxed mb-4">
     "Chez ITERIUM PARTNERS, nous ne sélectionnons pas des profils.
@@ -128,8 +129,6 @@ export default function HomePage() {
     </p>
   </div>
 </div>
-          
-          </div>
           <p className="text-slate-600 text-lg leading-relaxed">
             ITERIUM PARTNERS est une plateforme créée par des experts, pour des experts.
             Nous réinventons le business model du recrutement : 2026 marque un tournant dans ce domaine,
