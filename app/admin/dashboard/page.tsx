@@ -14,7 +14,11 @@ export default function AdminDashboard() {
   const [experts, setExperts] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("experts");
+  const [activeTab, setActiveTab] = useState("attente");
+  const [selectedExpert, setSelectedExpert] = useState<any>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
   const [stats, setStats] = useState({
     totalExperts: 0,
     expertsValides: 0,
@@ -23,62 +27,41 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/auth/login");
-        return;
-      }
-
-      // Vérifier le rôle admin
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.role !== "admin") {
-        router.push("/auth/login");
-        return;
-      }
-
-      // Charger tous les experts
-      const { data: expertsData } = await supabase
-        .from("experts")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      // Charger tous les clients
-      const { data: clientsData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("role", "client")
-        .order("created_at", { ascending: false });
-
-      const expertsList = expertsData || [];
-      const clientsList = clientsData || [];
-
-      setExperts(expertsList);
-      setClients(clientsList);
-      setStats({
-        totalExperts: expertsList.length,
-        expertsValides: expertsList.filter((e) => e.visible).length,
-        expertsEnAttente: expertsList.filter((e) => !e.visible).length,
-        totalClients: clientsList.length,
-      });
-
-      setLoading(false);
-    };
-
     fetchData();
   }, []);
 
+  const fetchData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.push("/auth/login"); return; }
+
+    const { data: profile } = await supabase
+      .from("profiles").select("role").eq("id", user.id).single();
+    if (profile?.role !== "admin") { router.push("/auth/login"); return; }
+
+    const { data: expertsData } = await supabase
+      .from("experts").select("*").order("created_at", { ascending: false });
+
+    const { data: clientsData } = await supabase
+      .from("profiles").select("*").eq("role", "client")
+      .order("created_at", { ascending: false });
+
+    const expertsList = expertsData || [];
+    const clientsList = clientsData || [];
+
+    setExperts(expertsList);
+    setClients(clientsList);
+    setStats({
+      totalExperts: expertsList.length,
+      expertsValides: expertsList.filter((e) => e.visible).length,
+      expertsEnAttente: expertsList.filter((e) => !e.visible).length,
+      totalClients: clientsList.length,
+    });
+    setLoading(false);
+  };
+
   const toggleVisible = async (expert: any) => {
     const { error } = await supabase
-      .from("experts")
-      .update({ visible: !expert.visible })
-      .eq("id", expert.id);
+      .from("experts").update({ visible: !expert.visible }).eq("id", expert.id);
 
     if (!error) {
       const updated = experts.map((e) =>
@@ -90,17 +73,15 @@ export default function AdminDashboard() {
         expertsValides: updated.filter((e) => e.visible).length,
         expertsEnAttente: updated.filter((e) => !e.visible).length,
       });
+      if (selectedExpert?.id === expert.id) {
+        setSelectedExpert({ ...selectedExpert, visible: !selectedExpert.visible });
+      }
     }
   };
 
   const deleteExpert = async (id: string) => {
     if (!confirm("Supprimer définitivement cet expert ?")) return;
-
-    const { error } = await supabase
-      .from("experts")
-      .delete()
-      .eq("id", id);
-
+    const { error } = await supabase.from("experts").delete().eq("id", id);
     if (!error) {
       const updated = experts.filter((e) => e.id !== id);
       setExperts(updated);
@@ -110,7 +91,35 @@ export default function AdminDashboard() {
         expertsValides: updated.filter((e) => e.visible).length,
         expertsEnAttente: updated.filter((e) => !e.visible).length,
       });
+      setSelectedExpert(null);
     }
+  };
+
+  const handleEditSave = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("experts")
+      .update({
+        prenom: editData.prenom,
+        nom: editData.nom,
+        telephone: editData.telephone,
+        linkedin: editData.linkedin,
+        metier: editData.metier,
+        experience: editData.experience,
+        expertises: editData.expertises,
+        localisation: editData.localisation,
+        tjm: editData.tjm,
+        disponibilite: editData.disponibilite,
+      })
+      .eq("id", editData.id);
+
+    if (!error) {
+      const updated = experts.map((e) => e.id === editData.id ? { ...e, ...editData } : e);
+      setExperts(updated);
+      setSelectedExpert({ ...editData });
+      setEditMode(false);
+    }
+    setSaving(false);
   };
 
   const handleLogout = async () => {
@@ -118,10 +127,13 @@ export default function AdminDashboard() {
     router.push("/auth/login");
   };
 
+  const expertsValides = experts.filter((e) => e.visible);
+  const expertsEnAttente = experts.filter((e) => !e.visible);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A2942] flex items-center justify-center">
-        <p className="text-white text-lg">Chargement de l'espace admin...</p>
+        <p className="text-white text-lg">Chargement...</p>
       </div>
     );
   }
@@ -134,17 +146,14 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <a href="/" className="hover:opacity-80 transition">
-  <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-14 w-auto" />
-</a>
+              <img src="/Logo.png" alt="ITERIUM PARTNERS" className="h-14 w-auto" />
+            </a>
             <div>
               <p className="text-xs text-slate-400">Espace Administration</p>
               <p className="font-bold">ITERIUM PARTNERS</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-xs text-slate-400 hover:text-white transition"
-          >
+          <button onClick={handleLogout} className="text-xs text-slate-400 hover:text-white transition">
             Déconnexion
           </button>
         </div>
@@ -171,31 +180,103 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* NAVIGATION ONGLETS */}
+        {/* ONGLETS */}
         <div className="bg-white rounded-t-2xl border-b flex gap-6 px-6">
-          {["experts", "clients"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`py-4 text-sm font-semibold border-b-2 transition ${
-                activeTab === tab
+          {[
+            { key: "attente", label: `⏳ En attente (${stats.expertsEnAttente})` },
+            { key: "experts", label: `👤 Experts validés (${stats.expertsValides})` },
+            { key: "clients", label: `🏢 Clients (${stats.totalClients})` },
+          ].map((tab) => (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              className={`py-4 text-sm font-semibold border-b-2 transition whitespace-nowrap ${
+                activeTab === tab.key
                   ? "border-[#F8B400] text-[#0A2942]"
                   : "border-transparent text-slate-500 hover:text-[#0A2942]"
-              }`}
-            >
-              {tab === "experts" && `👤 Experts (${stats.totalExperts})`}
-              {tab === "clients" && `🏢 Clients (${stats.totalClients})`}
+              }`}>
+              {tab.label}
+              {tab.key === "attente" && stats.expertsEnAttente > 0 && (
+                <span className="ml-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                  {stats.expertsEnAttente}
+                </span>
+              )}
             </button>
           ))}
         </div>
 
-        {/* ONGLET EXPERTS */}
+        {/* ONGLET EN ATTENTE */}
+        {activeTab === "attente" && (
+          <div className="bg-white rounded-b-2xl shadow overflow-hidden">
+            {expertsEnAttente.length === 0 ? (
+              <div className="text-center py-12 text-slate-400">
+                <p className="text-4xl mb-4">✅</p>
+                <p className="font-semibold">Aucun expert en attente de validation</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {expertsEnAttente.map((expert) => (
+                  <div key={expert.id} className="p-6 hover:bg-yellow-50 transition">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-xl bg-slate-100 overflow-hidden flex items-center justify-center shrink-0">
+                          {expert.photo_url ? (
+                            <img src={expert.photo_url} alt={expert.prenom} className="w-full h-full object-cover" />
+                          ) : (
+                            <svg className="w-8 h-8 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-[#0A2942] text-lg">{expert.prenom} {expert.nom}</p>
+                          <p className="text-sm text-slate-500">{expert.metier}</p>
+                          <p className="text-xs text-slate-400">{expert.email}</p>
+                          <p className="text-xs text-slate-400">📍 {expert.localisation} · 💶 {expert.tjm} €/j</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => { setSelectedExpert(expert); setEditMode(false); }}
+                          className="text-xs font-bold px-3 py-2 rounded-xl bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+                          👁️ Voir la fiche
+                        </button>
+                        <button onClick={() => toggleVisible(expert)}
+                          className="text-xs font-bold px-4 py-2 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition">
+                          ✅ Valider
+                        </button>
+                        <button onClick={() => deleteExpert(expert.id)}
+                          className="text-xs font-bold px-3 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 transition">
+                          🗑️ Supprimer
+                        </button>
+                      </div>
+                    </div>
+                    {/* Aperçu des infos clés */}
+                    <div className="mt-4 bg-slate-50 rounded-xl p-4 grid md:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-xs text-slate-400 mb-1">Expertises</p>
+                        <p className="text-slate-700">{expert.expertises || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 mb-1">Disponibilité</p>
+                        <p className="text-slate-700">{expert.disponibilite || "—"}</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-xs text-slate-400 mb-1">Parcours</p>
+                        <p className="text-slate-700 line-clamp-2">{expert.experience || "—"}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ONGLET EXPERTS VALIDES */}
         {activeTab === "experts" && (
           <div className="bg-white rounded-b-2xl shadow overflow-hidden">
-            {experts.length === 0 ? (
+            {expertsValides.length === 0 ? (
               <div className="text-center py-12 text-slate-400">
                 <p className="text-4xl mb-4">👤</p>
-                <p className="font-semibold">Aucun expert inscrit</p>
+                <p className="font-semibold">Aucun expert validé</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -206,16 +287,17 @@ export default function AdminDashboard() {
                       <th className="px-6 py-3 text-left">Métier</th>
                       <th className="px-6 py-3 text-left">Localisation</th>
                       <th className="px-6 py-3 text-left">TJM</th>
-                      <th className="px-6 py-3 text-left">Statut</th>
                       <th className="px-6 py-3 text-left">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {experts.map((expert) => (
-                      <tr key={expert.id} className="hover:bg-slate-50 transition">
+                    {expertsValides.map((expert) => (
+                      <tr key={expert.id}
+                        className="hover:bg-slate-50 transition cursor-pointer"
+                        onClick={() => { setSelectedExpert(expert); setEditMode(false); }}>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center shrink-0">
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden flex items-center justify-center shrink-0">
                               {expert.photo_url ? (
                                 <img src={expert.photo_url} alt={expert.prenom} className="w-full h-full object-cover" />
                               ) : (
@@ -233,32 +315,19 @@ export default function AdminDashboard() {
                         <td className="px-6 py-4 text-slate-600">{expert.metier}</td>
                         <td className="px-6 py-4 text-slate-600">{expert.localisation}</td>
                         <td className="px-6 py-4 font-semibold text-[#0A2942]">{expert.tjm} €/j</td>
-                        <td className="px-6 py-4">
-                          <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                            expert.visible
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}>
-                            {expert.visible ? "✔ Validé" : "⏳ En attente"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => toggleVisible(expert)}
-                              className={`text-xs font-bold px-3 py-1 rounded-lg transition ${
-                                expert.visible
-                                  ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                                  : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                              }`}
-                            >
-                              {expert.visible ? "Désactiver" : "Valider"}
+                            <button onClick={() => { setSelectedExpert(expert); setEditMode(false); }}
+                              className="text-xs font-bold px-3 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+                              👁️ Fiche
                             </button>
-                            <button
-                              onClick={() => deleteExpert(expert.id)}
-                              className="text-xs font-bold px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
-                            >
-                              Supprimer
+                            <button onClick={() => toggleVisible(expert)}
+                              className="text-xs font-bold px-3 py-1 rounded-lg bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition">
+                              Désactiver
+                            </button>
+                            <button onClick={() => deleteExpert(expert.id)}
+                              className="text-xs font-bold px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition">
+                              🗑️
                             </button>
                           </div>
                         </td>
@@ -287,17 +356,26 @@ export default function AdminDashboard() {
                       <th className="px-6 py-3 text-left">Client</th>
                       <th className="px-6 py-3 text-left">Société</th>
                       <th className="px-6 py-3 text-left">Email</th>
+                      <th className="px-6 py-3 text-left">Abonnement</th>
                       <th className="px-6 py-3 text-left">Inscription</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {clients.map((client) => (
                       <tr key={client.id} className="hover:bg-slate-50 transition">
-                        <td className="px-6 py-4">
-                          <p className="font-semibold text-[#0A2942]">{client.prenom} {client.nom}</p>
-                        </td>
+                        <td className="px-6 py-4 font-semibold text-[#0A2942]">{client.prenom} {client.nom}</td>
                         <td className="px-6 py-4 text-slate-600">{client.societe || "—"}</td>
                         <td className="px-6 py-4 text-slate-600">{client.email}</td>
+                        <td className="px-6 py-4">
+                          <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                            client.abonnement === "premium" ? "bg-yellow-100 text-yellow-700" :
+                            client.abonnement === "standard" ? "bg-blue-100 text-blue-700" :
+                            "bg-slate-100 text-slate-500"
+                          }`}>
+                            {client.abonnement === "premium" ? "⭐ Groupe" :
+                             client.abonnement === "standard" ? "✔ Essentiel" : "Sans abonnement"}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 text-slate-400 text-xs">
                           {new Date(client.created_at).toLocaleDateString("fr-FR")}
                         </td>
@@ -309,8 +387,165 @@ export default function AdminDashboard() {
             )}
           </div>
         )}
-
       </div>
+
+      {/* MODAL FICHE EXPERT */}
+      {selectedExpert && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => { setSelectedExpert(null); setEditMode(false); }}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}>
+
+            {/* Header modal */}
+            <div className="bg-[#0A2942] rounded-t-3xl p-6 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-600 flex items-center justify-center">
+                  {selectedExpert.photo_url ? (
+                    <img src={selectedExpert.photo_url} alt={selectedExpert.prenom} className="w-full h-full object-cover" />
+                  ) : (
+                    <svg className="w-10 h-10 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <p className="font-bold text-white text-xl">{selectedExpert.prenom} {selectedExpert.nom}</p>
+                  <p className="text-slate-300 text-sm">{selectedExpert.metier}</p>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    selectedExpert.visible ? "bg-emerald-400 text-emerald-900" : "bg-yellow-400 text-yellow-900"
+                  }`}>
+                    {selectedExpert.visible ? "✔ Validé" : "⏳ En attente"}
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => { setSelectedExpert(null); setEditMode(false); }}
+                className="text-white/60 hover:text-white text-2xl font-bold">✕</button>
+            </div>
+
+            <div className="p-6 space-y-4">
+
+              {!editMode ? (
+                <>
+                  {/* Vue fiche */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {[
+                      { label: "Email", value: selectedExpert.email },
+                      { label: "Téléphone", value: selectedExpert.telephone || "—" },
+                      { label: "LinkedIn", value: selectedExpert.linkedin || "—" },
+                      { label: "Localisation", value: selectedExpert.localisation || "—" },
+                      { label: "TJM", value: selectedExpert.tjm ? `${selectedExpert.tjm} €/j` : "—" },
+                      { label: "Disponibilité", value: selectedExpert.disponibilite || "—" },
+                    ].map((item) => (
+                      <div key={item.label} className="bg-slate-50 rounded-xl p-3">
+                        <p className="text-xs text-slate-400 mb-1">{item.label}</p>
+                        <p className="text-sm font-semibold text-[#0A2942]">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <p className="text-xs text-slate-400 mb-2">Expertises clés</p>
+                    <p className="text-sm text-slate-700">{selectedExpert.expertises || "—"}</p>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <p className="text-xs text-slate-400 mb-2">Résumé parcours</p>
+                    <p className="text-sm text-slate-700">{selectedExpert.experience || "—"}</p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3 pt-2">
+                    <button onClick={() => { setEditMode(true); setEditData({ ...selectedExpert }); }}
+                      className="flex-1 bg-[#F8B400] text-[#0A2942] font-bold py-2 rounded-xl hover:bg-yellow-400 transition text-sm">
+                      ✏️ Modifier la fiche
+                    </button>
+                    <button onClick={() => toggleVisible(selectedExpert)}
+                      className={`flex-1 font-bold py-2 rounded-xl transition text-sm ${
+                        selectedExpert.visible
+                          ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                          : "bg-emerald-500 text-white hover:bg-emerald-600"
+                      }`}>
+                      {selectedExpert.visible ? "Désactiver" : "✅ Valider"}
+                    </button>
+                    <button onClick={() => deleteExpert(selectedExpert.id)}
+                      className="bg-red-100 text-red-700 font-bold py-2 px-4 rounded-xl hover:bg-red-200 transition text-sm">
+                      🗑️
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Mode édition */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 mb-1 block">Prénom</label>
+                      <input type="text" value={editData.prenom || ""} onChange={(e) => setEditData({ ...editData, prenom: e.target.value })}
+                        className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 mb-1 block">Nom</label>
+                      <input type="text" value={editData.nom || ""} onChange={(e) => setEditData({ ...editData, nom: e.target.value })}
+                        className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 mb-1 block">Téléphone</label>
+                      <input type="text" value={editData.telephone || ""} onChange={(e) => setEditData({ ...editData, telephone: e.target.value })}
+                        className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 mb-1 block">LinkedIn</label>
+                      <input type="text" value={editData.linkedin || ""} onChange={(e) => setEditData({ ...editData, linkedin: e.target.value })}
+                        className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 mb-1 block">Fonction</label>
+                      <input type="text" value={editData.metier || ""} onChange={(e) => setEditData({ ...editData, metier: e.target.value })}
+                        className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 mb-1 block">TJM (€/j)</label>
+                      <input type="text" value={editData.tjm || ""} onChange={(e) => setEditData({ ...editData, tjm: e.target.value })}
+                        className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 mb-1 block">Localisation</label>
+                      <input type="text" value={editData.localisation || ""} onChange={(e) => setEditData({ ...editData, localisation: e.target.value })}
+                        className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 mb-1 block">Disponibilité</label>
+                      <input type="text" value={editData.disponibilite || ""} onChange={(e) => setEditData({ ...editData, disponibilite: e.target.value })}
+                        className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 mb-1 block">Expertises clés</label>
+                    <textarea value={editData.expertises || ""} onChange={(e) => setEditData({ ...editData, expertises: e.target.value })}
+                      rows={3} className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 mb-1 block">Résumé parcours</label>
+                    <textarea value={editData.experience || ""} onChange={(e) => setEditData({ ...editData, experience: e.target.value })}
+                      rows={4} className="w-full border border-slate-300 rounded-xl p-3 text-sm" />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button onClick={handleEditSave} disabled={saving}
+                      className="flex-1 bg-[#F8B400] text-[#0A2942] font-bold py-3 rounded-xl hover:bg-yellow-400 transition disabled:opacity-50">
+                      {saving ? "Sauvegarde..." : "💾 Sauvegarder"}
+                    </button>
+                    <button onClick={() => setEditMode(false)}
+                      className="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-200 transition">
+                      Annuler
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
